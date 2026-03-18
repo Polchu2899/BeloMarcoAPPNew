@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { Search, Map, Filter, Database, ChevronRight, Camera, FileText, Share2, Copy, Check, Monitor, Smartphone, AlertCircle, X, Trash2, Download } from 'lucide-react';
 import { Client, Activity } from '../types/client';
@@ -75,8 +77,15 @@ const Index = () => {
     }
   };
 
+  const handleDeleteClient = (id: string) => {
+    if (confirm("¿Estás seguro de que deseas eliminar este cliente?")) {
+      const updated = clients.filter(c => c.id !== id);
+      saveToDatabase(updated);
+      showSuccess("Cliente eliminado");
+    }
+  };
+
   const handleShare = () => {
-    // Intentamos obtener la URL de la ventana padre si estamos en un iframe
     const currentUrl = window.location.href;
     
     if (navigator.share) {
@@ -158,7 +167,11 @@ const Index = () => {
             {visibleClients.length > 0 ? (
               visibleClients.map(client => (
                 <div key={client.id} onClick={() => setSelectedClient(client)} className="cursor-pointer active:scale-[0.98] transition-transform">
-                  <ClientCard client={client} onEdit={(c) => { setEditingClient(c); setIsFormOpen(true); }} />
+                  <ClientCard 
+                    client={client} 
+                    onEdit={(c) => { setEditingClient(c); setIsFormOpen(true); }} 
+                    onDelete={handleDeleteClient}
+                  />
                 </div>
               ))
             ) : (
@@ -224,7 +237,6 @@ const Index = () => {
         )}
       </main>
 
-      {/* Diálogos se mantienen igual */}
       <Dialog open={!!selectedClient} onOpenChange={() => setSelectedClient(null)}>
         <DialogContent className="sm:max-w-[500px] h-[90vh] flex flex-col p-0 overflow-hidden rounded-t-[2rem]">
           {selectedClient && (

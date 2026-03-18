@@ -1,5 +1,7 @@
+"use client";
+
 import React from 'react';
-import { MapPin, User, Phone, Edit, Navigation, Compass } from 'lucide-react';
+import { MapPin, User, Phone, Edit, Navigation, Compass, Trash2 } from 'lucide-react';
 import { Client } from '../types/client';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
@@ -13,17 +15,18 @@ import {
 interface ClientCardProps {
   client: Client;
   onEdit: (client: Client) => void;
+  onDelete: (id: string) => void;
 }
 
-const ClientCard = ({ client, onEdit }: ClientCardProps) => {
+const ClientCard = ({ client, onEdit, onDelete }: ClientCardProps) => {
   const openInMaps = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Evita que se abra la ficha del cliente
+    e.stopPropagation();
     const encodedAddress = encodeURIComponent(client.address);
     window.location.href = `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`;
   };
 
   const openInWaze = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Evita que se abra la ficha del cliente
+    e.stopPropagation();
     const encodedAddress = encodeURIComponent(client.address);
     window.location.href = `https://waze.com/ul?q=${encodedAddress}&navigate=yes`;
   };
@@ -38,14 +41,24 @@ const ClientCard = ({ client, onEdit }: ClientCardProps) => {
     onEdit(client);
   };
 
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onDelete(client.id);
+  };
+
   return (
     <Card className="mb-4 overflow-hidden border-l-4 border-l-primary shadow-md bg-white">
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start">
           <CardTitle className="text-lg font-bold text-primary">{client.name}</CardTitle>
-          <Button variant="ghost" size="icon" onClick={handleEdit} className="h-8 w-8">
-            <Edit className="h-4 w-4" />
-          </Button>
+          <div className="flex gap-1">
+            <Button variant="ghost" size="icon" onClick={handleEdit} className="h-8 w-8 text-slate-500">
+              <Edit className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="icon" onClick={handleDelete} className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10">
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
         <div className="flex items-center text-sm text-muted-foreground">
           <User className="mr-1 h-3 w-3" />
