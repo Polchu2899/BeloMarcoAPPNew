@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Search, Map, Filter, Database, ChevronRight, Camera, FileText, Share2, Copy, Check, Monitor, Smartphone, AlertCircle, X, Trash2, Download } from 'lucide-react';
+import { Search, Map, Filter, Database, ChevronRight, Camera, FileText, Share2, Copy, Check, Monitor, Smartphone, AlertCircle, X, Trash2, Download, Apple, Info } from 'lucide-react';
 import { Client, Activity } from '../types/client';
 import ClientCard from '../components/ClientCard';
 import ClientForm from '../components/ClientForm';
@@ -191,32 +191,46 @@ const Index = () => {
 
         {activeTab === 'settings' && (
           <div className="space-y-6">
-            <h2 className="font-bold text-xl px-2">Ajustes y Móvil</h2>
+            <h2 className="font-bold text-xl px-2">Configuración</h2>
             
-            <div className="bg-gradient-to-br from-primary to-slate-800 rounded-3xl p-6 text-white shadow-xl space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="bg-white/20 p-2 rounded-xl"><Smartphone className="h-6 w-6" /></div>
-                <h3 className="font-bold text-lg">Instalar en el Móvil</h3>
+            <div className="bg-white rounded-3xl p-6 border shadow-sm space-y-6">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="bg-blue-100 p-2 rounded-xl"><Smartphone className="h-6 w-6 text-blue-600" /></div>
+                <h3 className="font-bold text-lg">Instalar en Pantalla de Inicio</h3>
               </div>
               
-              <div className="space-y-4 text-sm opacity-90">
-                <div className="flex gap-3">
-                  <div className="bg-white text-primary h-5 w-5 rounded-full flex items-center justify-center shrink-0 font-bold text-xs">1</div>
-                  <p>No uses el enlace "localhost". Usa la URL pública de la vista previa.</p>
+              <div className="grid gap-4">
+                <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Apple className="h-4 w-4" />
+                    <span className="font-bold text-sm">Si usas iPhone (Safari)</span>
+                  </div>
+                  <ol className="text-xs space-y-2 text-slate-600 list-decimal pl-4">
+                    <li>Pulsa el botón <b>Compartir</b> (cuadrado con flecha <Share2 className="inline h-3 w-3" />).</li>
+                    <li>Busca y pulsa <b>"Añadir a pantalla de inicio"</b>.</li>
+                  </ol>
                 </div>
-                <div className="flex gap-3">
-                  <div className="bg-white text-primary h-5 w-5 rounded-full flex items-center justify-center shrink-0 font-bold text-xs">2</div>
-                  <p>En iPhone: Pulsa <Share2 className="inline h-4 w-4" /> y <b>"Añadir a pantalla de inicio"</b>.</p>
-                </div>
-                <div className="flex gap-3">
-                  <div className="bg-white text-primary h-5 w-5 rounded-full flex items-center justify-center shrink-0 font-bold text-xs">3</div>
-                  <p>En Android: Pulsa los tres puntos y <b>"Instalar aplicación"</b>.</p>
+
+                <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="h-4 w-4 bg-green-500 rounded-full flex items-center justify-center text-[8px] text-white font-bold">A</div>
+                    <span className="font-bold text-sm">Si usas Android (Chrome)</span>
+                  </div>
+                  <ol className="text-xs space-y-2 text-slate-600 list-decimal pl-4">
+                    <li>Pulsa los <b>tres puntos</b> de la esquina superior.</li>
+                    <li>Pulsa <b>"Instalar aplicación"</b> o "Añadir a pantalla de inicio".</li>
+                  </ol>
                 </div>
               </div>
               
-              <div className="bg-amber-400/20 p-3 rounded-xl border border-amber-400/30 flex gap-2 items-start">
-                <AlertCircle className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
-                <p className="text-[10px] text-amber-100">Si ves "localhost", ese enlace solo funciona en tu PC. Busca el botón de "Abrir en nueva pestaña" en el editor para obtener el enlace real.</p>
+              <div className="bg-amber-50 p-4 rounded-2xl border border-amber-100 flex gap-3 items-start">
+                <Info className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  <p className="text-xs font-bold text-amber-900">¡Importante!</p>
+                  <p className="text-[11px] text-amber-800 leading-relaxed">
+                    Asegúrate de abrir la URL pública (la que termina en .vercel.app). Si ves "localhost" en la barra de direcciones, el icono no funcionará en tu móvil.
+                  </p>
+                </div>
               </div>
             </div>
 
