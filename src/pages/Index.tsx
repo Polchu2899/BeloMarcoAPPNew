@@ -8,6 +8,7 @@ import ClientForm from '../components/ClientForm';
 import DataManagement from '../components/DataManagement';
 import ActivityLog from '../components/ActivityLog';
 import BottomNav from '../components/BottomNav';
+import Logo from '../components/Logo';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -124,9 +125,9 @@ const Index = () => {
     <div className="min-h-screen bg-slate-50 pb-24">
       <header className="bg-primary text-primary-foreground p-6 rounded-b-[2.5rem] shadow-xl sticky top-0 z-10">
         <div className="flex justify-between items-center mb-6">
-          <div>
-            <h1 className="text-2xl font-black tracking-tight">BelaMarcoAPP</h1>
-            <p className="text-xs opacity-80 font-medium">{clients.length} clientes en memoria</p>
+          <div className="flex flex-col gap-1">
+            <Logo className="h-12" />
+            <p className="text-[10px] opacity-70 font-medium ml-1">{clients.length} clientes en cartera</p>
           </div>
           <div className="flex gap-2">
             <Button size="icon" variant="ghost" className="rounded-full bg-white/10" onClick={handleShare}>
