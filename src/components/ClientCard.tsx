@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { MapPin, User, Phone, Edit, Navigation, Compass, Trash2, CreditCard } from 'lucide-react';
+import { MapPin, User, Phone, Edit, Navigation, Compass, Trash2, CreditCard, Hash } from 'lucide-react';
 import { Client } from '../types/client';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
@@ -47,22 +47,22 @@ const ClientCard = ({ client, onEdit, onDelete }: ClientCardProps) => {
   };
 
   return (
-    <Card className="mb-4 overflow-hidden border-l-4 border-l-primary shadow-md bg-white">
+    <Card className="mb-4 overflow-hidden border-l-4 border-l-primary shadow-md bg-white active:scale-[0.98] transition-transform">
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start">
-          <CardTitle className="text-lg font-bold text-primary">{client.name}</CardTitle>
+          <CardTitle className="text-lg font-bold text-primary leading-tight">{client.name}</CardTitle>
           <div className="flex gap-1">
-            <Button variant="ghost" size="icon" onClick={handleEdit} className="h-8 w-8 text-slate-500">
+            <Button variant="ghost" size="icon" onClick={handleEdit} className="h-8 w-8 text-slate-400">
               <Edit className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="icon" onClick={handleDelete} className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10">
+            <Button variant="ghost" size="icon" onClick={handleDelete} className="h-8 w-8 text-destructive/40 hover:text-destructive">
               <Trash2 className="h-4 w-4" />
             </Button>
           </div>
         </div>
-        <div className="flex items-center text-sm text-muted-foreground">
+        <div className="flex items-center text-xs text-muted-foreground mt-1">
           <User className="mr-1 h-3 w-3" />
-          <span>{client.contact || 'Sin contacto'}</span>
+          <span className="font-medium">{client.contact || 'Sin contacto'}</span>
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -72,14 +72,19 @@ const ClientCard = ({ client, onEdit, onDelete }: ClientCardProps) => {
         </div>
         
         <div className="flex gap-2 flex-wrap">
+          {client.nif && (
+            <span className="bg-slate-100 text-slate-600 px-2 py-1 rounded-md text-[10px] font-bold flex items-center gap-1">
+              <Hash className="h-3 w-3" /> {client.nif}
+            </span>
+          )}
           {client.paymentMethod && (
-            <span className="bg-amber-100 text-amber-700 px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
+            <span className="bg-amber-100 text-amber-700 px-2 py-1 rounded-md text-[10px] font-bold uppercase flex items-center gap-1">
               <CreditCard className="h-3 w-3" /> {client.paymentMethod}
             </span>
           )}
           {client.zones && (
-            <span className="bg-primary/10 text-primary px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
-              Zona: {client.zones}
+            <span className="bg-primary/10 text-primary px-2 py-1 rounded-md text-[10px] font-bold uppercase">
+              {client.zones}
             </span>
           )}
         </div>

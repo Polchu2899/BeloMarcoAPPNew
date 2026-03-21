@@ -24,6 +24,14 @@ const Index = () => {
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [displayLimit, setDisplayLimit] = useState(20);
 
+  // Función mejorada para encontrar campos sin importar el nombre exacto del encabezado
+  const getFieldValue = (obj: any, search: string) => {
+    if (obj[search] !== undefined) return obj[search];
+    // Buscar por coincidencia parcial (ej: "Campo personalizado 1")
+    const key = Object.keys(obj).find(k => k.toLowerCase().includes(search.toLowerCase()));
+    return key ? obj[key] : '';
+  };
+
   const hydrateClients = (data: any[]): Client[] => {
     return data.map(c => ({
       ...c,
@@ -33,14 +41,14 @@ const Index = () => {
       phone: String(c.phone || c.Teléfono || ''),
       phone2: String(c.phone2 || c.Teléfono2 || ''),
       email: c.email || c.Email || '',
-      nif: c.nif || c['Campo personalizado 1 (NIF/CIF)'] || '',
-      contact: c.contact || c['Campo personalizado 2 (CONTACTO)'] || '',
-      paymentMethod: c.paymentMethod || c['Campo personalizado 3 (FORMA DE PAGO)'] || '',
-      accountNumber: c.accountNumber || c['Campo personalizado 4 (NUMERO DE CUENTA)'] || '',
-      postalCode: c.postalCode || c['Campo personalizado 5 (CODIGO POSTAL)'] || '',
-      shippingAddress: c.shippingAddress || c['Campo personalizado 6 (DIRECCION DE ENVIO)'] || '',
-      taxType: c.taxType || c['Campo personalizado 7 (IVA/RE)'] || '',
-      shops: c.shops || c['Campo personalizado 8 (BOTIGUES)'] || '',
+      nif: c.nif || getFieldValue(c, 'Campo personalizado 1') || '',
+      contact: c.contact || getFieldValue(c, 'Campo personalizado 2') || '',
+      paymentMethod: c.paymentMethod || getFieldValue(c, 'Campo personalizado 3') || '',
+      accountNumber: c.accountNumber || getFieldValue(c, 'Campo personalizado 4') || '',
+      postalCode: c.postalCode || getFieldValue(c, 'Campo personalizado 5') || '',
+      shippingAddress: c.shippingAddress || getFieldValue(c, 'Campo personalizado 6') || '',
+      taxType: c.taxType || getFieldValue(c, 'Campo personalizado 7') || '',
+      shops: c.shops || getFieldValue(c, 'Campo personalizado 8') || '',
       activities: Array.isArray(c.activities) ? c.activities : [],
       documents: Array.isArray(c.documents) ? c.documents : [],
     }));
@@ -90,14 +98,15 @@ const Index = () => {
     return clients.filter(c => 
       (c.name || '').toLowerCase().includes(s) ||
       (c.zones || '').toLowerCase().includes(s) ||
-      (c.nif || '').toLowerCase().includes(s)
+      (c.nif || '').toLowerCase().includes(s) ||
+      (c.address || '').toLowerCase().includes(s)
     );
   }, [clients, searchTerm]);
 
   const visibleClients = filteredClients.slice(0, displayLimit);
 
   const InfoRow = ({ icon: Icon, label, value, color = "text-slate-400" }: { icon: any, label: string, value?: string, color?: string }) => {
-    if (!value || value.trim() === '') return null;
+    if (!value || String(value).trim() === '') return null;
     return (
       <div className="flex items-start gap-4 py-3 border-b border-slate-50 last:border-0">
         <div className={`${color} mt-1 shrink-0`}><Icon className="h-5 w-5" /></div>
@@ -141,11 +150,18 @@ const Index = () => {
       <main className="p-4 max-w-md mx-auto">
         {activeTab === 'clients' && (
           <div className="space-y-4">
-            {visibleClients.map(client => (
-              <div key={client.id} onClick={() => setSelectedClient(client)} className="cursor-pointer">
-                <ClientCard client={client} onEdit={(c) => { setEditingClient(c); setIsFormOpen(true); }} onDelete={handleDeleteClient} />
+            {visibleClients.length === 0 ? (
+              <div className="text-center py-20 text-slate-400">
+                <Database className="h-12 w-12 mx-auto mb-4 opacity-20" />
+                <p>No hay clientes. Importa un CSV en Ajustes.</p>
               </div>
-            ))}
+            ) : (
+              visibleClients.map(client => (
+                <div key={client.id} onClick={() => setSelectedClient(client)} className="cursor-pointer">
+                  <ClientCard client={client} onEdit={(c) => { setEditingClient(c); setIsFormOpen(true); }} onDelete={handleDeleteClient} />
+                </div>
+              ))
+            )}
           </div>
         )}
 
@@ -153,6 +169,13 @@ const Index = () => {
           <div className="p-4 bg-white rounded-2xl border shadow-sm">
             <h2 className="font-bold mb-4">Configuración</h2>
             <DataManagement clients={clients} onImport={handleImport} />
+            <Button 
+              variant="destructive" 
+              className="w-full mt-8 gap-2" 
+              onClick={() => { if(confirm("¿Borrar todos los datos?")) { localStorage.removeItem('belamarcoapp_db_v1'); setClients([]); showSuccess("Base de datos borrada"); } }}
+            >
+              <Trash2 className="h-4 w-4" /> Borrar Base de Datos
+            </Button>
           </div>
         )}
       </main>
