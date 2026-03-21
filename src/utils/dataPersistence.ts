@@ -51,24 +51,39 @@ export const parseCSV = (csvText: string): Client[] => {
   for (let i = 1; i < lines.length; i++) {
     if (!lines[i].trim()) continue;
     
-    // Regex para manejar comas dentro de comillas
     const values = lines[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
     if (!values) continue;
     
     const cleanValues = values.map(v => v.replace(/^"|"$/g, '').replace(/""/g, '"'));
     
+    // Lógica inteligente para separar Email de Teléfono
+    // Recogemos todos los posibles campos de contacto
+    const contactFields = [
+      cleanValues[5], // Teléfono 1
+      cleanValues[6], // Teléfono 2
+      cleanValues[7], // Teléfono 3
+      cleanValues[8], // Teléfono 4
+      cleanValues[10] // Email original
+    ].filter(v => v && v.trim() !== '');
+
+    // Separamos los que tienen @ (emails) de los que no (teléfonos)
+    const emails = contactFields.filter(v => v.includes('@'));
+    const phones = contactFields.filter(v => !v.includes('@'));
+
     clients.push({
       id: cleanValues[0] || Math.random().toString(36).substr(2, 9),
       name: cleanValues[1] || '',
       address: cleanValues[2] || '',
       lat: cleanValues[3],
       lng: cleanValues[4],
-      phone: cleanValues[5] || '',
-      phone2: cleanValues[6],
-      phone3: cleanValues[7],
-      phone4: cleanValues[8],
+      // Asignamos los teléfonos encontrados en orden
+      phone: phones[0] || '',
+      phone2: phones[1] || '',
+      phone3: phones[2] || '',
+      phone4: phones[3] || '',
       website: cleanValues[9],
-      email: cleanValues[10],
+      // Asignamos el primer email encontrado
+      email: emails[0] || '',
       rating: cleanValues[11],
       markerColor: cleanValues[12],
       tags: cleanValues[13],
