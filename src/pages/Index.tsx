@@ -32,8 +32,6 @@ const Index = () => {
       address: c.address || c.Dirección || 'Sin Dirección',
       phone: String(c.phone || c.Teléfono || ''),
       phone2: String(c.phone2 || c.Teléfono2 || ''),
-      phone3: String(c.phone3 || c.Teléfono3 || ''),
-      phone4: String(c.phone4 || c.Teléfono4 || ''),
       email: c.email || c.Email || '',
       lat: c.lat || c.Latitud || '',
       lng: c.lng || c.Longitud || '',
@@ -49,8 +47,6 @@ const Index = () => {
       shippingAddress: c.shippingAddress || c['Campo personalizado 6 (DIRECCION DE ENVIO)'] || '',
       taxType: c.taxType || c['Campo personalizado 7 (IVA/RE)'] || '',
       shops: c.shops || c['Campo personalizado 8 (BOTIGUES)'] || '',
-      custom9: c.custom9 || c['Campo personalizado 9'] || '',
-      custom10: c.custom10 || c['Campo personalizado 10'] || '',
       activities: Array.isArray(c.activities) ? c.activities : [],
       documents: Array.isArray(c.documents) ? c.documents : [],
     }));
@@ -86,36 +82,11 @@ const Index = () => {
     setActiveTab('clients');
   };
 
-  const handleClearData = () => {
-    if (confirm("¿Borrar todos los clientes de la memoria?")) {
-      setClients([]);
-      localStorage.removeItem('belamarcoapp_db_v1');
-      showSuccess("Memoria limpia");
-    }
-  };
-
   const handleDeleteClient = (id: string) => {
     if (confirm("¿Estás seguro de que deseas eliminar este cliente?")) {
       const updated = clients.filter(c => c.id !== id);
       saveToDatabase(updated);
       showSuccess("Cliente eliminado");
-    }
-  };
-
-  const handleShare = () => {
-    const currentUrl = window.location.href;
-    if (navigator.share) {
-      navigator.share({
-        title: 'BelaMarco APP',
-        text: 'Accede a la gestión de clientes',
-        url: currentUrl,
-      }).catch(() => {
-        navigator.clipboard.writeText(currentUrl);
-        showSuccess("Enlace copiado");
-      });
-    } else {
-      navigator.clipboard.writeText(currentUrl);
-      showSuccess("Enlace copiado al portapapeles");
     }
   };
 
@@ -132,8 +103,6 @@ const Index = () => {
       (c.paymentMethod || '').toLowerCase().includes(s)
     );
   }, [clients, searchTerm]);
-
-  useEffect(() => { setDisplayLimit(20); }, [searchTerm]);
 
   const visibleClients = filteredClients.slice(0, displayLimit);
 
@@ -168,9 +137,6 @@ const Index = () => {
             <p className="text-[10px] opacity-70 font-medium ml-1">{clients.length} clientes en cartera</p>
           </div>
           <div className="flex gap-2">
-            <Button size="icon" variant="ghost" className="rounded-full bg-white/10" onClick={handleShare}>
-              <Share2 className="h-5 w-5" />
-            </Button>
             <Button size="icon" variant="ghost" className="rounded-full bg-white/10" onClick={() => setActiveTab('settings')}>
               <Database className="h-5 w-5" />
             </Button>
@@ -196,13 +162,6 @@ const Index = () => {
       <main className="p-4 max-w-md mx-auto">
         {activeTab === 'clients' && (
           <div className="space-y-4">
-            <div className="flex justify-between items-center px-2">
-              <h2 className="font-bold text-slate-800">{searchTerm ? 'Resultados' : 'Cartera'}</h2>
-              <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full font-bold">
-                {filteredClients.length} MOSTRADOS
-              </span>
-            </div>
-
             {visibleClients.length > 0 ? (
               visibleClients.map(client => (
                 <div key={client.id} onClick={() => setSelectedClient(client)} className="cursor-pointer active:scale-[0.98] transition-transform">
@@ -215,15 +174,9 @@ const Index = () => {
               ))
             ) : (
               <div className="text-center py-20 text-slate-400 space-y-4">
-                <p>{clients.length === 0 ? 'No hay clientes guardados.' : 'Sin resultados.'}</p>
-                {clients.length === 0 && <Button onClick={() => setActiveTab('settings')} variant="outline">Importar CSV</Button>}
+                <p>No hay clientes guardados.</p>
+                <Button onClick={() => setActiveTab('settings')} variant="outline">Importar CSV</Button>
               </div>
-            )}
-
-            {filteredClients.length > displayLimit && (
-              <Button variant="ghost" className="w-full text-primary font-bold py-6" onClick={() => setDisplayLimit(prev => prev + 50)}>
-                Cargar más (+{filteredClients.length - displayLimit})
-              </Button>
             )}
           </div>
         )}
@@ -232,16 +185,6 @@ const Index = () => {
           <div className="space-y-6">
             <h2 className="font-bold text-xl px-2">Configuración</h2>
             <div className="bg-white rounded-2xl border p-5 shadow-sm space-y-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="bg-primary/10 p-2 rounded-lg"><Database className="h-5 w-5 text-primary" /></div>
-                  <div>
-                    <p className="text-sm font-bold">Base de Datos Local</p>
-                    <p className="text-xs text-slate-500">{clients.length} clientes memorizados</p>
-                  </div>
-                </div>
-                <Button variant="ghost" size="icon" className="text-destructive" onClick={handleClearData}><Trash2 className="h-5 w-5" /></Button>
-              </div>
               <DataManagement clients={clients} onImport={handleImport} />
             </div>
           </div>
