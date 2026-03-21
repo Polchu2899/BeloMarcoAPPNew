@@ -33,12 +33,6 @@ const Index = () => {
       phone: String(c.phone || c.Teléfono || ''),
       phone2: String(c.phone2 || c.Teléfono2 || ''),
       email: c.email || c.Email || '',
-      lat: c.lat || c.Latitud || '',
-      lng: c.lng || c.Longitud || '',
-      website: c.website || c.Website || '',
-      rating: c.rating || c.Valoración || '',
-      tags: c.tags || c.Etiquetas || '',
-      zones: c.zones || c.Zonas || '',
       nif: c.nif || c['Campo personalizado 1 (NIF/CIF)'] || '',
       contact: c.contact || c['Campo personalizado 2 (CONTACTO)'] || '',
       paymentMethod: c.paymentMethod || c['Campo personalizado 3 (FORMA DE PAGO)'] || '',
@@ -72,7 +66,7 @@ const Index = () => {
       setClients(hydrated);
       localStorage.setItem('belamarcoapp_db_v1', JSON.stringify(hydrated));
     } catch (e) {
-      showError("Error al guardar. ¿El archivo es muy grande?");
+      showError("Error al guardar.");
     }
   };
 
@@ -83,7 +77,7 @@ const Index = () => {
   };
 
   const handleDeleteClient = (id: string) => {
-    if (confirm("¿Estás seguro de que deseas eliminar este cliente?")) {
+    if (confirm("¿Eliminar este cliente?")) {
       const updated = clients.filter(c => c.id !== id);
       saveToDatabase(updated);
       showSuccess("Cliente eliminado");
@@ -96,11 +90,7 @@ const Index = () => {
     return clients.filter(c => 
       (c.name || '').toLowerCase().includes(s) ||
       (c.zones || '').toLowerCase().includes(s) ||
-      (c.address || '').toLowerCase().includes(s) ||
-      (c.contact || '').toLowerCase().includes(s) ||
-      (c.phone || '').includes(s) ||
-      (c.nif || '').toLowerCase().includes(s) ||
-      (c.paymentMethod || '').toLowerCase().includes(s)
+      (c.nif || '').toLowerCase().includes(s)
     );
   }, [clients, searchTerm]);
 
@@ -132,61 +122,37 @@ const Index = () => {
     <div className="min-h-screen bg-slate-50 pb-24">
       <header className="bg-primary text-primary-foreground p-6 rounded-b-[2.5rem] shadow-xl sticky top-0 z-10">
         <div className="flex justify-between items-center mb-6">
-          <div className="flex flex-col gap-1">
-            <Logo className="h-12" />
-            <p className="text-[10px] opacity-70 font-medium ml-1">{clients.length} clientes en cartera</p>
-          </div>
-          <div className="flex gap-2">
-            <Button size="icon" variant="ghost" className="rounded-full bg-white/10" onClick={() => setActiveTab('settings')}>
-              <Database className="h-5 w-5" />
-            </Button>
-          </div>
+          <Logo className="h-12" />
+          <Button size="icon" variant="ghost" className="rounded-full bg-white/10" onClick={() => setActiveTab('settings')}>
+            <Database className="h-5 w-5" />
+          </Button>
         </div>
-        
         <div className="relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
           <Input 
-            placeholder="Buscar por nombre, zona, NIF, pago..." 
-            className="pl-11 pr-10 bg-white text-black rounded-2xl border-none h-14 shadow-2xl text-base"
+            placeholder="Buscar por nombre, zona o NIF..." 
+            className="pl-11 pr-10 bg-white text-black rounded-2xl border-none h-14 shadow-2xl"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
-          {searchTerm && (
-            <button onClick={() => setSearchTerm('')} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400">
-              <X className="h-5 w-5" />
-            </button>
-          )}
         </div>
       </header>
 
       <main className="p-4 max-w-md mx-auto">
         {activeTab === 'clients' && (
           <div className="space-y-4">
-            {visibleClients.length > 0 ? (
-              visibleClients.map(client => (
-                <div key={client.id} onClick={() => setSelectedClient(client)} className="cursor-pointer active:scale-[0.98] transition-transform">
-                  <ClientCard 
-                    client={client} 
-                    onEdit={(c) => { setEditingClient(c); setIsFormOpen(true); }} 
-                    onDelete={handleDeleteClient}
-                  />
-                </div>
-              ))
-            ) : (
-              <div className="text-center py-20 text-slate-400 space-y-4">
-                <p>No hay clientes guardados.</p>
-                <Button onClick={() => setActiveTab('settings')} variant="outline">Importar CSV</Button>
+            {visibleClients.map(client => (
+              <div key={client.id} onClick={() => setSelectedClient(client)} className="cursor-pointer">
+                <ClientCard client={client} onEdit={(c) => { setEditingClient(c); setIsFormOpen(true); }} onDelete={handleDeleteClient} />
               </div>
-            )}
+            ))}
           </div>
         )}
 
         {activeTab === 'settings' && (
-          <div className="space-y-6">
-            <h2 className="font-bold text-xl px-2">Configuración</h2>
-            <div className="bg-white rounded-2xl border p-5 shadow-sm space-y-6">
-              <DataManagement clients={clients} onImport={handleImport} />
-            </div>
+          <div className="p-4 bg-white rounded-2xl border shadow-sm">
+            <h2 className="font-bold mb-4">Configuración</h2>
+            <DataManagement clients={clients} onImport={handleImport} />
           </div>
         )}
       </main>
@@ -197,54 +163,45 @@ const Index = () => {
             <>
               <div className="bg-primary p-6 text-white shrink-0">
                 <div className="flex justify-between items-start mb-4">
-                  <div className="flex-1 pr-4">
-                    <h2 className="text-2xl font-bold leading-tight">{selectedClient.name}</h2>
-                    <p className="opacity-80 text-sm mt-1 flex items-center gap-1">
-                      <MapPin className="h-3 w-3" /> {selectedClient.address}
-                    </p>
+                  <div className="flex-1">
+                    <h2 className="text-2xl font-bold">{selectedClient.name}</h2>
+                    <p className="opacity-80 text-sm flex items-center gap-1"><MapPin className="h-3 w-3" /> {selectedClient.address}</p>
                   </div>
-                  <Button variant="ghost" size="icon" className="text-white rounded-full bg-white/10" onClick={() => setSelectedClient(null)}>
-                    <X className="h-5 w-5" />
-                  </Button>
+                  <Button variant="ghost" size="icon" className="text-white" onClick={() => setSelectedClient(null)}><X className="h-5 w-5" /></Button>
                 </div>
                 <div className="flex gap-2 flex-wrap">
-                  {selectedClient.paymentMethod && <span className="bg-amber-400 text-amber-950 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">{selectedClient.paymentMethod}</span>}
-                  {selectedClient.zones && <span className="bg-white/20 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">{selectedClient.zones}</span>}
-                  {selectedClient.nif && <span className="bg-white/20 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">{selectedClient.nif}</span>}
+                  {selectedClient.paymentMethod && <span className="bg-amber-400 text-amber-950 px-3 py-1 rounded-full text-[10px] font-bold uppercase">{selectedClient.paymentMethod}</span>}
+                  {selectedClient.nif && <span className="bg-white/20 px-3 py-1 rounded-full text-[10px] font-bold uppercase">{selectedClient.nif}</span>}
                 </div>
               </div>
               <Tabs defaultValue="info" className="flex-1 flex flex-col overflow-hidden">
-                <TabsList className="w-full justify-start rounded-none border-b bg-white px-4 shrink-0">
+                <TabsList className="w-full justify-start rounded-none border-b bg-white px-4">
                   <TabsTrigger value="info" className="flex-1">Información</TabsTrigger>
                   <TabsTrigger value="actividad" className="flex-1">Actividad</TabsTrigger>
                 </TabsList>
-                <div className="flex-1 overflow-y-auto bg-white">
-                  <TabsContent value="info" className="m-0 p-6 space-y-1">
+                <div className="flex-1 overflow-y-auto bg-white p-6">
+                  <TabsContent value="info" className="m-0 space-y-1">
                     <InfoRow icon={User} label="Nombre del Negocio" value={selectedClient.name} color="text-blue-500" />
                     <InfoRow icon={MapPin} label="Dirección Principal" value={selectedClient.address} color="text-red-500" />
                     <InfoRow icon={Phone} label="Teléfono 1" value={selectedClient.phone} color="text-green-500" />
                     <InfoRow icon={Phone} label="Teléfono 2" value={selectedClient.phone2} color="text-green-600" />
-                    <InfoRow icon={Mail} label="E-mail de Contacto" value={selectedClient.email} color="text-amber-500" />
+                    <InfoRow icon={Mail} label="E-mail" value={selectedClient.email} color="text-amber-500" />
                     <InfoRow icon={Hash} label={getDocLabel(selectedClient.nif || '')} value={selectedClient.nif} color="text-slate-700" />
                     <InfoRow icon={User} label="Persona de Contacto" value={selectedClient.contact} color="text-indigo-500" />
+                    <InfoRow icon={Receipt} label="IBAN / Nº Cuenta" value={selectedClient.accountNumber} color="text-blue-700" />
                     <InfoRow icon={CreditCard} label="Forma de Pago" value={selectedClient.paymentMethod} color="text-amber-600" />
-                    <InfoRow icon={Receipt} label="IBAN / Número de Cuenta" value={selectedClient.accountNumber} color="text-blue-700" />
                     <InfoRow icon={Hash} label="Código Postal" value={selectedClient.postalCode} color="text-slate-700" />
                     <InfoRow icon={MapPin} label="Dirección de Envío" value={selectedClient.shippingAddress} color="text-slate-500" />
                     <InfoRow icon={Receipt} label="IVA / RE" value={selectedClient.taxType} color="text-slate-700" />
                     <InfoRow icon={Store} label="Botigues" value={selectedClient.shops} color="text-slate-700" />
-                    <InfoRow icon={Globe} label="Website" value={selectedClient.website} color="text-blue-400" />
-                    <InfoRow icon={Tag} label="Etiquetas" value={selectedClient.tags} color="text-purple-500" />
-                    <InfoRow icon={Star} label="Valoración" value={selectedClient.rating} color="text-yellow-500" />
-                    <InfoRow icon={FileText} label="Notas Adicionales" value={selectedClient.notes} color="text-slate-400" />
+                    <InfoRow icon={Tag} label="Zonas" value={selectedClient.zones} color="text-purple-500" />
+                    <InfoRow icon={FileText} label="Notas" value={selectedClient.notes} color="text-slate-400" />
                   </TabsContent>
-                  <TabsContent value="actividad" className="m-0 p-4">
+                  <TabsContent value="actividad" className="m-0">
                     <ActivityLog activities={selectedClient.activities || []} onAddActivity={(a) => {
-                      const newActivity = { ...a, id: Math.random().toString(36).substr(2, 9) };
-                      const updated = clients.map(c => c.id === selectedClient.id ? { ...c, activities: [...(c.activities || []), newActivity] } : c);
+                      const updated = clients.map(c => c.id === selectedClient.id ? { ...c, activities: [...(c.activities || []), { ...a, id: Date.now().toString() }] } : c);
                       saveToDatabase(updated);
                       setSelectedClient(updated.find(c => c.id === selectedClient.id) || null);
-                      showSuccess('Actividad registrada');
                     }} />
                   </TabsContent>
                 </div>
@@ -255,20 +212,11 @@ const Index = () => {
       </Dialog>
 
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent className="sm:max-w-[425px] h-[80vh] flex flex-col p-0 overflow-hidden rounded-t-3xl sm:rounded-lg">
-          <div className="p-6 border-b shrink-0">
-            <DialogTitle>{editingClient ? 'Editar Cliente' : 'Nuevo Cliente'}</DialogTitle>
-          </div>
+        <DialogContent className="sm:max-w-[425px] h-[80vh] flex flex-col p-0 overflow-hidden rounded-t-3xl">
+          <div className="p-6 border-b"><DialogTitle>{editingClient ? 'Editar Cliente' : 'Nuevo Cliente'}</DialogTitle></div>
           <div className="flex-1 overflow-hidden p-6">
             <ClientForm client={editingClient} onSave={(data) => {
-              let updated;
-              if (editingClient) {
-                updated = clients.map(c => c.id === data.id ? { ...c, ...data } : c);
-                showSuccess('Ficha actualizada');
-              } else {
-                updated = [...clients, { ...data, id: Math.random().toString(36).substr(2, 9), activities: [], documents: [] }];
-                showSuccess('Cliente registrado');
-              }
+              const updated = editingClient ? clients.map(c => c.id === data.id ? { ...c, ...data } : c) : [...clients, data];
               saveToDatabase(updated);
               setIsFormOpen(false);
             }} onCancel={() => setIsFormOpen(false)} />

@@ -1,6 +1,5 @@
 import { Client } from '../types/client';
 
-// Encabezados exactos del CSV proporcionado
 const CSV_HEADERS = [
   "Id", "Nombre", "Dirección", "Latitud", "Longitud", "Teléfono", "Teléfono2", "Teléfono3", "Teléfono4", 
   "Website", "Email", "Valoración", "Color del marcador del mapa", "Etiquetas", "Zonas", 
@@ -19,8 +18,8 @@ export const convertToCSV = (clients: Client[]): string => {
     c.lng || '',
     c.phone || '',
     c.phone2 || '',
-    c.phone3 || '',
-    c.phone4 || '',
+    '', // Teléfono 3 (Vacío)
+    '', // Teléfono 4 (Vacío)
     c.website || '',
     c.email || '',
     c.rating || '',
@@ -51,19 +50,10 @@ export const parseCSV = (csvText: string): Client[] => {
   for (let i = 1; i < lines.length; i++) {
     if (!lines[i].trim()) continue;
     
-    // Regex para manejar comas dentro de comillas
     const values = lines[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
     if (!values) continue;
     
     const cleanValues = values.map(v => v.replace(/^"|"$/g, '').replace(/""/g, '"'));
-    
-    // 1. Separación inteligente de Email y Teléfono en los campos de contacto
-    const contactFields = [
-      cleanValues[5], cleanValues[6], cleanValues[7], cleanValues[8], cleanValues[10]
-    ].filter(v => v && v.trim() !== '');
-
-    const emails = contactFields.filter(v => v.includes('@'));
-    const phones = contactFields.filter(v => !v.includes('@'));
 
     clients.push({
       id: cleanValues[0] || Math.random().toString(36).substr(2, 9),
@@ -71,25 +61,22 @@ export const parseCSV = (csvText: string): Client[] => {
       address: cleanValues[2] || '',
       lat: cleanValues[3],
       lng: cleanValues[4],
-      phone: phones[0] || '',
-      phone2: phones[1] || '',
-      phone3: phones[2] || '',
-      phone4: phones[3] || '',
+      phone: cleanValues[5] || '',
+      phone2: cleanValues[6] || '',
       website: cleanValues[9],
-      email: emails[0] || '',
+      email: cleanValues[10],
       rating: cleanValues[11],
       markerColor: cleanValues[12],
       tags: cleanValues[13],
       zones: cleanValues[14],
-      // Mapeo exhaustivo de campos personalizados
-      nif: cleanValues[15],           // Campo 1: NIF/CIF/DNI
-      contact: cleanValues[16],       // Campo 2: Persona de Contacto
-      paymentMethod: cleanValues[17], // Campo 3: Forma de Pago
-      accountNumber: cleanValues[18], // Campo 4: IBAN / Nº Cuenta
-      postalCode: cleanValues[19],    // Campo 5: Código Postal
-      shippingAddress: cleanValues[20], // Campo 6: Dirección Envío
-      taxType: cleanValues[21],       // Campo 7: IVA / RE
-      shops: cleanValues[22],         // Campo 8: Botigues
+      nif: cleanValues[15],           
+      contact: cleanValues[16],       
+      paymentMethod: cleanValues[17], 
+      accountNumber: cleanValues[18], 
+      postalCode: cleanValues[19],    
+      shippingAddress: cleanValues[20], 
+      taxType: cleanValues[21],       
+      shops: cleanValues[22],         
       custom9: cleanValues[23],
       custom10: cleanValues[24],
       activities: [],
