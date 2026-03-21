@@ -41,6 +41,7 @@ const Index = () => {
       rating: c.rating || c.Valoración || '',
       tags: c.tags || c.Etiquetas || '',
       zones: c.zones || c.Zonas || '',
+      // Mapeo específico de campos personalizados del CSV
       nif: c.nif || c['Campo personalizado 1 (NIF/CIF)'] || '',
       contact: c.contact || c['Campo personalizado 2 (CONTACTO)'] || '',
       paymentMethod: c.paymentMethod || c['Campo personalizado 3 (FORMA DE PAGO)'] || '',
@@ -126,7 +127,8 @@ const Index = () => {
       (c.address || '').toLowerCase().includes(s) ||
       (c.contact || '').toLowerCase().includes(s) ||
       (c.phone || '').includes(s) ||
-      (c.nif || '').toLowerCase().includes(s)
+      (c.nif || '').toLowerCase().includes(s) ||
+      (c.paymentMethod || '').toLowerCase().includes(s)
     );
   }, [clients, searchTerm]);
 
@@ -168,7 +170,7 @@ const Index = () => {
         <div className="relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
           <Input 
-            placeholder="Buscar por nombre, zona, NIF..." 
+            placeholder="Buscar por nombre, zona, NIF, pago..." 
             className="pl-11 pr-10 bg-white text-black rounded-2xl border-none h-14 shadow-2xl text-base"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -253,6 +255,7 @@ const Index = () => {
                   </Button>
                 </div>
                 <div className="flex gap-2 flex-wrap">
+                  {selectedClient.paymentMethod && <span className="bg-amber-400 text-amber-950 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">{selectedClient.paymentMethod}</span>}
                   {selectedClient.zones && <span className="bg-white/20 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">{selectedClient.zones}</span>}
                   {selectedClient.nif && <span className="bg-white/20 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">{selectedClient.nif}</span>}
                 </div>
@@ -266,14 +269,15 @@ const Index = () => {
                   <TabsContent value="info" className="m-0 p-6 space-y-1">
                     <InfoRow icon={User} label="Nombre" value={selectedClient.name} color="text-blue-500" />
                     <InfoRow icon={MapPin} label="Dirección" value={selectedClient.address} color="text-red-500" />
-                    {selectedClient.lat && <InfoRow icon={Navigation} label="GPS" value={`${selectedClient.lat}, ${selectedClient.lng}`} color="text-slate-600" />}
                     <InfoRow icon={Phone} label="Teléfono 1" value={selectedClient.phone} color="text-green-500" />
                     <InfoRow icon={Phone} label="Teléfono 2" value={selectedClient.phone2} color="text-green-600" />
                     <InfoRow icon={Mail} label="E-mail" value={selectedClient.email} color="text-amber-500" />
                     <InfoRow icon={Hash} label="NIF / CIF" value={selectedClient.nif} color="text-slate-700" />
-                    <InfoRow icon={CreditCard} label="Forma de Pago" value={selectedClient.paymentMethod} color="text-purple-500" />
-                    <InfoRow icon={Receipt} label="Número de Cuenta" value={selectedClient.accountNumber} color="text-slate-700" />
+                    <InfoRow icon={User} label="Contacto" value={selectedClient.contact} color="text-indigo-500" />
+                    <InfoRow icon={CreditCard} label="Forma de Pago" value={selectedClient.paymentMethod} color="text-amber-600" />
+                    <InfoRow icon={Receipt} label="IBAN / Número de Cuenta" value={selectedClient.accountNumber} color="text-blue-700" />
                     <InfoRow icon={Hash} label="Código Postal" value={selectedClient.postalCode} color="text-slate-700" />
+                    <InfoRow icon={MapPin} label="Dirección de Envío" value={selectedClient.shippingAddress} color="text-slate-500" />
                     <InfoRow icon={Receipt} label="IVA / RE" value={selectedClient.taxType} color="text-slate-700" />
                     <InfoRow icon={Store} label="Botigues" value={selectedClient.shops} color="text-slate-700" />
                     <InfoRow icon={Globe} label="Website" value={selectedClient.website} color="text-blue-400" />
