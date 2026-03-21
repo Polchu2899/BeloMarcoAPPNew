@@ -24,29 +24,23 @@ const Index = () => {
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [displayLimit, setDisplayLimit] = useState(20);
 
-  const getFieldValue = (obj: any, search: string) => {
-    if (obj[search] !== undefined && obj[search] !== '') return obj[search];
-    const key = Object.keys(obj).find(k => k.toLowerCase().includes(search.toLowerCase()));
-    return key ? obj[key] : '';
-  };
-
   const hydrateClients = (data: any[]): Client[] => {
     return data.map(c => ({
       ...c,
-      id: c.id || c.Id || Math.random().toString(36).substr(2, 9),
-      name: c.name || c.Nombre || 'Sin Nombre',
-      address: c.address || c.Dirección || 'Sin Dirección',
-      phone: String(c.phone || c.Teléfono || ''),
-      phone2: String(c.phone2 || c.Teléfono2 || ''),
-      email: c.email || c.Email || '',
-      nif: c.nif || getFieldValue(c, 'Campo personalizado 1') || '',
-      contact: c.contact || getFieldValue(c, 'Campo personalizado 2') || '',
-      paymentMethod: c.paymentMethod || getFieldValue(c, 'Campo personalizado 3') || '',
-      accountNumber: c.accountNumber || getFieldValue(c, 'Campo personalizado 4') || '',
-      postalCode: c.postalCode || getFieldValue(c, 'Campo personalizado 5') || '',
-      shippingAddress: c.shippingAddress || getFieldValue(c, 'Campo personalizado 6') || '',
-      taxType: c.taxType || getFieldValue(c, 'Campo personalizado 7') || '',
-      shops: c.shops || getFieldValue(c, 'Campo personalizado 8') || '',
+      id: c.id || Math.random().toString(36).substr(2, 9),
+      name: c.name || 'Sin Nombre',
+      address: c.address || 'Sin Dirección',
+      phone: String(c.phone || ''),
+      phone2: String(c.phone2 || ''),
+      email: c.email || '',
+      nif: c.nif || '',
+      contact: c.contact || '',
+      paymentMethod: c.paymentMethod || '',
+      accountNumber: c.accountNumber || '',
+      postalCode: c.postalCode || '',
+      shippingAddress: c.shippingAddress || '',
+      taxType: c.taxType || '',
+      shops: c.shops || '',
       activities: Array.isArray(c.activities) ? c.activities : [],
       documents: Array.isArray(c.documents) ? c.documents : [],
     }));
@@ -104,9 +98,7 @@ const Index = () => {
   const visibleClients = filteredClients.slice(0, displayLimit);
 
   const InfoRow = ({ icon: Icon, label, value, color = "text-slate-400" }: { icon: any, label: string, value?: string, color?: string }) => {
-    // Si no hay valor, no mostramos la fila para no ensuciar la vista
     if (!value || String(value).trim() === '' || value === 'undefined') return null;
-    
     return (
       <div className="flex items-start gap-4 py-3 border-b border-slate-50 last:border-0">
         <div className={`${color} mt-1 shrink-0`}><Icon className="h-5 w-5" /></div>

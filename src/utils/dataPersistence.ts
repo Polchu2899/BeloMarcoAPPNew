@@ -27,8 +27,7 @@ export const convertToCSV = (clients: Client[]): string => {
     c.lng || '',
     c.phone || '',
     c.phone2 || '',
-    '', // Teléfono 3 (Ignorado)
-    '', // Teléfono 4 (Ignorado)
+    '', '', // Tel 3 y 4
     c.website || '',
     c.email || '',
     c.rating || '',
@@ -43,51 +42,66 @@ export const convertToCSV = (clients: Client[]): string => {
     `"${(c.shippingAddress || '').replace(/"/g, '""')}"`,
     `"${(c.taxType || '').replace(/"/g, '""')}"`,
     `"${(c.shops || '').replace(/"/g, '""')}"`,
-    `"${(c.custom9 || '').replace(/"/g, '""')}"`,
-    `"${(c.custom10 || '').replace(/"/g, '""')}"`
+    '', '' // Custom 9 y 10
   ].join(','));
   
   return [CSV_HEADERS.join(','), ...rows].join('\n');
 };
 
+// Función profesional para parsear CSV manejando comillas y comas internas
+function splitCSVLine(line: string): string[] {
+  const result = [];
+  let current = '';
+  let inQuotes = false;
+  
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+    if (char === '"') {
+      inQuotes = !inQuotes;
+    } else if (char === ',' && !inQuotes) {
+      result.push(current.trim());
+      current = '';
+    } else {
+      current += char;
+    }
+  }
+  result.push(current.trim());
+  return result.map(v => v.replace(/^"|"$/g, '').replace(/""/g, '"'));
+}
+
 export const parseCSV = (csvText: string): Client[] => {
-  const lines = csvText.split(/\r?\n/);
+  const lines = csvText.split(/\r?\n/).filter(line => line.trim() !== '');
   if (lines.length < 2) return [];
   
   const clients: Client[] = [];
   
+  // Empezamos en 1 para saltar la cabecera
   for (let i = 1; i < lines.length; i++) {
-    if (!lines[i].trim()) continue;
+    const values = splitCSVLine(lines[i]);
     
-    const values = lines[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
-    if (!values) continue;
-    
-    const cleanValues = values.map(v => v.replace(/^"|"$/g, '').replace(/""/g, '"'));
-
+    // Mapeo exacto por posición (0-indexed)
     clients.push({
-      id: cleanValues[0] || Math.random().toString(36).substr(2, 9),
-      name: cleanValues[1] || '',
-      address: cleanValues[2] || '',
-      lat: cleanValues[3],
-      lng: cleanValues[4],
-      phone: cleanValues[5] || '',
-      phone2: cleanValues[6] || '',
-      website: cleanValues[9],
-      email: cleanValues[10],
-      rating: cleanValues[11],
-      markerColor: cleanValues[12],
-      tags: cleanValues[13],
-      zones: cleanValues[14],
-      nif: cleanValues[15],           
-      contact: cleanValues[16],       
-      paymentMethod: cleanValues[17], 
-      accountNumber: cleanValues[18], 
-      postalCode: cleanValues[19],    
-      shippingAddress: cleanValues[20], 
-      taxType: cleanValues[21],       
-      shops: cleanValues[22],         
-      custom9: cleanValues[23],
-      custom10: cleanValues[24],
+      id: values[0] || Math.random().toString(36).substr(2, 9),
+      name: values[1] || '',
+      address: values[2] || '',
+      lat: values[3],
+      lng: values[4],
+      phone: values[5] || '',
+      phone2: values[6] || '',
+      website: values[9],
+      email: values[10],
+      rating: values[11],
+      markerColor: values[12],
+      tags: values[13],
+      zones: values[14],
+      nif: values[15],           // Campo personalizado 1
+      contact: values[16],       // Campo personalizado 2
+      paymentMethod: values[17], // Campo personalizado 3
+      accountNumber: values[18], // Campo personalizado 4
+      postalCode: values[19],    // Campo personalizado 5
+      shippingAddress: values[20], // Campo personalizado 6
+      taxType: values[21],       // Campo personalizado 7
+      shops: values[22],         // Campo personalizado 8
       activities: [],
       documents: []
     });
