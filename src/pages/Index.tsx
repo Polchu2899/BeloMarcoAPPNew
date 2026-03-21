@@ -281,8 +281,6 @@ const Index = () => {
                     <InfoRow icon={MapPin} label="Dirección Principal" value={selectedClient.address} color="text-red-500" />
                     <InfoRow icon={Phone} label="Teléfono 1" value={selectedClient.phone} color="text-green-500" />
                     <InfoRow icon={Phone} label="Teléfono 2" value={selectedClient.phone2} color="text-green-600" />
-                    <InfoRow icon={Phone} label="Teléfono 3" value={selectedClient.phone3} color="text-green-700" />
-                    <InfoRow icon={Phone} label="Teléfono 4" value={selectedClient.phone4} color="text-green-800" />
                     <InfoRow icon={Mail} label="E-mail de Contacto" value={selectedClient.email} color="text-amber-500" />
                     <InfoRow icon={Hash} label={getDocLabel(selectedClient.nif || '')} value={selectedClient.nif} color="text-slate-700" />
                     <InfoRow icon={User} label="Persona de Contacto" value={selectedClient.contact} color="text-indigo-500" />
@@ -295,8 +293,6 @@ const Index = () => {
                     <InfoRow icon={Globe} label="Website" value={selectedClient.website} color="text-blue-400" />
                     <InfoRow icon={Tag} label="Etiquetas" value={selectedClient.tags} color="text-purple-500" />
                     <InfoRow icon={Star} label="Valoración" value={selectedClient.rating} color="text-yellow-500" />
-                    <InfoRow icon={FileText} label="Campo Personalizado 9" value={selectedClient.custom9} color="text-slate-400" />
-                    <InfoRow icon={FileText} label="Campo Personalizado 10" value={selectedClient.custom10} color="text-slate-400" />
                     <InfoRow icon={FileText} label="Notas Adicionales" value={selectedClient.notes} color="text-slate-400" />
                   </TabsContent>
                   <TabsContent value="actividad" className="m-0 p-4">

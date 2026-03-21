@@ -51,23 +51,19 @@ export const parseCSV = (csvText: string): Client[] => {
   for (let i = 1; i < lines.length; i++) {
     if (!lines[i].trim()) continue;
     
+    // Regex para manejar comas dentro de comillas
     const values = lines[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
     if (!values) continue;
     
     const cleanValues = values.map(v => v.replace(/^"|"$/g, '').replace(/""/g, '"'));
     
-    // 1. Separación inteligente de Email y Teléfono
+    // 1. Separación inteligente de Email y Teléfono en los campos de contacto
     const contactFields = [
       cleanValues[5], cleanValues[6], cleanValues[7], cleanValues[8], cleanValues[10]
     ].filter(v => v && v.trim() !== '');
 
     const emails = contactFields.filter(v => v.includes('@'));
     const phones = contactFields.filter(v => !v.includes('@'));
-
-    // 2. Lógica de NIF vs DNI (Campo 15)
-    let idDocument = cleanValues[15] || '';
-    // Si empieza por letra es NIF/CIF, si acaba en letra es DNI
-    // No cambiamos el valor, pero aseguramos que se guarde en el campo correcto
 
     clients.push({
       id: cleanValues[0] || Math.random().toString(36).substr(2, 9),
@@ -85,15 +81,15 @@ export const parseCSV = (csvText: string): Client[] => {
       markerColor: cleanValues[12],
       tags: cleanValues[13],
       zones: cleanValues[14],
-      // Mapeo exhaustivo según la imagen y el CSV
-      nif: idDocument,                                // Campo 1 (NIF/CIF)
-      contact: cleanValues[16],                       // Campo 2 (CONTACTO)
-      paymentMethod: cleanValues[17],                 // Campo 3 (FORMA DE PAGO)
-      accountNumber: cleanValues[18],                 // Campo 4 (NUMERO DE CUENTA)
-      postalCode: cleanValues[19],                    // Campo 5 (CODIGO POSTAL)
-      shippingAddress: cleanValues[20],               // Campo 6 (DIRECCION DE ENVIO)
-      taxType: cleanValues[21],                       // Campo 7 (IVA/RE)
-      shops: cleanValues[22],                         // Campo 8 (BOTIGUES)
+      // Mapeo exhaustivo de campos personalizados
+      nif: cleanValues[15],           // Campo 1: NIF/CIF/DNI
+      contact: cleanValues[16],       // Campo 2: Persona de Contacto
+      paymentMethod: cleanValues[17], // Campo 3: Forma de Pago
+      accountNumber: cleanValues[18], // Campo 4: IBAN / Nº Cuenta
+      postalCode: cleanValues[19],    // Campo 5: Código Postal
+      shippingAddress: cleanValues[20], // Campo 6: Dirección Envío
+      taxType: cleanValues[21],       // Campo 7: IVA / RE
+      shops: cleanValues[22],         // Campo 8: Botigues
       custom9: cleanValues[23],
       custom10: cleanValues[24],
       activities: [],
@@ -102,13 +98,4 @@ export const parseCSV = (csvText: string): Client[] => {
   }
   
   return clients;
-};
-
-export const downloadFile = (content: string, fileName: string, contentType: string) => {
-  const a = document.createElement('a');
-  const file = new Blob([content], { type: contentType });
-  a.href = URL.createObjectURL(file);
-  a.download = fileName;
-  a.click();
-  URL.revokeObjectURL(a.href);
 };
