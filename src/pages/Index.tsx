@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Search, Map, Filter, Database, ChevronRight, Camera, FileText, Share2, Copy, Check, Monitor, Smartphone, AlertCircle, X, Trash2, Download, Apple, Info, User, MapPin, Phone, Mail, CreditCard, Receipt, Store, Hash, Navigation, Globe } from 'lucide-react';
+import { Search, Map, Filter, Database, ChevronRight, Camera, FileText, Share2, Copy, Check, Monitor, Smartphone, AlertCircle, X, Trash2, Download, Apple, Info, User, MapPin, Phone, Mail, CreditCard, Receipt, Store, Hash, Navigation, Globe, Tag, Star } from 'lucide-react';
 import { Client, Activity } from '../types/client';
 import ClientCard from '../components/ClientCard';
 import ClientForm from '../components/ClientForm';
@@ -49,6 +49,8 @@ const Index = () => {
       shippingAddress: c.shippingAddress || c['Campo personalizado 6 (DIRECCION DE ENVIO)'] || '',
       taxType: c.taxType || c['Campo personalizado 7 (IVA/RE)'] || '',
       shops: c.shops || c['Campo personalizado 8 (BOTIGUES)'] || '',
+      custom9: c.custom9 || c['Campo personalizado 9'] || '',
+      custom10: c.custom10 || c['Campo personalizado 10'] || '',
       activities: Array.isArray(c.activities) ? c.activities : [],
       documents: Array.isArray(c.documents) ? c.documents : [],
     }));
@@ -136,7 +138,7 @@ const Index = () => {
   const visibleClients = filteredClients.slice(0, displayLimit);
 
   const InfoRow = ({ icon: Icon, label, value, color = "text-slate-400" }: { icon: any, label: string, value?: string, color?: string }) => {
-    if (!value) return null;
+    if (!value || value.trim() === '') return null;
     return (
       <div className="flex items-start gap-4 py-3 border-b border-slate-50 last:border-0">
         <div className={`${color} mt-1 shrink-0`}><Icon className="h-5 w-5" /></div>
@@ -148,7 +150,6 @@ const Index = () => {
     );
   };
 
-  // Función para determinar si es NIF o DNI
   const getDocLabel = (doc: string) => {
     if (!doc) return "NIF / DNI";
     const firstChar = doc.charAt(0).toUpperCase();
@@ -276,13 +277,15 @@ const Index = () => {
                 </TabsList>
                 <div className="flex-1 overflow-y-auto bg-white">
                   <TabsContent value="info" className="m-0 p-6 space-y-1">
-                    <InfoRow icon={User} label="Nombre" value={selectedClient.name} color="text-blue-500" />
-                    <InfoRow icon={MapPin} label="Dirección" value={selectedClient.address} color="text-red-500" />
+                    <InfoRow icon={User} label="Nombre del Negocio" value={selectedClient.name} color="text-blue-500" />
+                    <InfoRow icon={MapPin} label="Dirección Principal" value={selectedClient.address} color="text-red-500" />
                     <InfoRow icon={Phone} label="Teléfono 1" value={selectedClient.phone} color="text-green-500" />
                     <InfoRow icon={Phone} label="Teléfono 2" value={selectedClient.phone2} color="text-green-600" />
-                    <InfoRow icon={Mail} label="E-mail" value={selectedClient.email} color="text-amber-500" />
+                    <InfoRow icon={Phone} label="Teléfono 3" value={selectedClient.phone3} color="text-green-700" />
+                    <InfoRow icon={Phone} label="Teléfono 4" value={selectedClient.phone4} color="text-green-800" />
+                    <InfoRow icon={Mail} label="E-mail de Contacto" value={selectedClient.email} color="text-amber-500" />
                     <InfoRow icon={Hash} label={getDocLabel(selectedClient.nif || '')} value={selectedClient.nif} color="text-slate-700" />
-                    <InfoRow icon={User} label="Contacto" value={selectedClient.contact} color="text-indigo-500" />
+                    <InfoRow icon={User} label="Persona de Contacto" value={selectedClient.contact} color="text-indigo-500" />
                     <InfoRow icon={CreditCard} label="Forma de Pago" value={selectedClient.paymentMethod} color="text-amber-600" />
                     <InfoRow icon={Receipt} label="IBAN / Número de Cuenta" value={selectedClient.accountNumber} color="text-blue-700" />
                     <InfoRow icon={Hash} label="Código Postal" value={selectedClient.postalCode} color="text-slate-700" />
@@ -290,7 +293,11 @@ const Index = () => {
                     <InfoRow icon={Receipt} label="IVA / RE" value={selectedClient.taxType} color="text-slate-700" />
                     <InfoRow icon={Store} label="Botigues" value={selectedClient.shops} color="text-slate-700" />
                     <InfoRow icon={Globe} label="Website" value={selectedClient.website} color="text-blue-400" />
-                    <InfoRow icon={FileText} label="Notas" value={selectedClient.notes} color="text-slate-400" />
+                    <InfoRow icon={Tag} label="Etiquetas" value={selectedClient.tags} color="text-purple-500" />
+                    <InfoRow icon={Star} label="Valoración" value={selectedClient.rating} color="text-yellow-500" />
+                    <InfoRow icon={FileText} label="Campo Personalizado 9" value={selectedClient.custom9} color="text-slate-400" />
+                    <InfoRow icon={FileText} label="Campo Personalizado 10" value={selectedClient.custom10} color="text-slate-400" />
+                    <InfoRow icon={FileText} label="Notas Adicionales" value={selectedClient.notes} color="text-slate-400" />
                   </TabsContent>
                   <TabsContent value="actividad" className="m-0 p-4">
                     <ActivityLog activities={selectedClient.activities || []} onAddActivity={(a) => {
