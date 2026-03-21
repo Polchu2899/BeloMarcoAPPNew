@@ -9,6 +9,15 @@ const CSV_HEADERS = [
   "Campo personalizado 8 (BOTIGUES)", "Campo personalizado 9", "Campo personalizado 10"
 ];
 
+export const downloadFile = (content: string, fileName: string, contentType: string) => {
+  const a = document.createElement("a");
+  const file = new Blob([content], { type: contentType });
+  a.href = URL.createObjectURL(file);
+  a.download = fileName;
+  a.click();
+  URL.revokeObjectURL(a.href);
+};
+
 export const convertToCSV = (clients: Client[]): string => {
   const rows = clients.map(c => [
     c.id,
@@ -18,8 +27,8 @@ export const convertToCSV = (clients: Client[]): string => {
     c.lng || '',
     c.phone || '',
     c.phone2 || '',
-    '', // Teléfono 3 (Vacío)
-    '', // Teléfono 4 (Vacío)
+    '', // Teléfono 3 (Ignorado)
+    '', // Teléfono 4 (Ignorado)
     c.website || '',
     c.email || '',
     c.rating || '',
