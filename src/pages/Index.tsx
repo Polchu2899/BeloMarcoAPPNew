@@ -24,10 +24,8 @@ const Index = () => {
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [displayLimit, setDisplayLimit] = useState(20);
 
-  // Función mejorada para encontrar campos sin importar el nombre exacto del encabezado
   const getFieldValue = (obj: any, search: string) => {
-    if (obj[search] !== undefined) return obj[search];
-    // Buscar por coincidencia parcial (ej: "Campo personalizado 1")
+    if (obj[search] !== undefined && obj[search] !== '') return obj[search];
     const key = Object.keys(obj).find(k => k.toLowerCase().includes(search.toLowerCase()));
     return key ? obj[key] : '';
   };
@@ -106,7 +104,9 @@ const Index = () => {
   const visibleClients = filteredClients.slice(0, displayLimit);
 
   const InfoRow = ({ icon: Icon, label, value, color = "text-slate-400" }: { icon: any, label: string, value?: string, color?: string }) => {
-    if (!value || String(value).trim() === '') return null;
+    // Si no hay valor, no mostramos la fila para no ensuciar la vista
+    if (!value || String(value).trim() === '' || value === 'undefined') return null;
+    
     return (
       <div className="flex items-start gap-4 py-3 border-b border-slate-50 last:border-0">
         <div className={`${color} mt-1 shrink-0`}><Icon className="h-5 w-5" /></div>
@@ -116,15 +116,6 @@ const Index = () => {
         </div>
       </div>
     );
-  };
-
-  const getDocLabel = (doc: string) => {
-    if (!doc) return "NIF / DNI";
-    const firstChar = doc.charAt(0).toUpperCase();
-    const lastChar = doc.charAt(doc.length - 1).toUpperCase();
-    if (/[A-Z]/.test(firstChar)) return "NIF / CIF";
-    if (/[A-Z]/.test(lastChar)) return "DNI";
-    return "NIF / DNI";
   };
 
   return (
@@ -209,7 +200,7 @@ const Index = () => {
                     <InfoRow icon={Phone} label="Teléfono 1" value={selectedClient.phone} color="text-green-500" />
                     <InfoRow icon={Phone} label="Teléfono 2" value={selectedClient.phone2} color="text-green-600" />
                     <InfoRow icon={Mail} label="E-mail" value={selectedClient.email} color="text-amber-500" />
-                    <InfoRow icon={Hash} label={getDocLabel(selectedClient.nif || '')} value={selectedClient.nif} color="text-slate-700" />
+                    <InfoRow icon={Hash} label="NIF / CIF / DNI" value={selectedClient.nif} color="text-slate-700" />
                     <InfoRow icon={User} label="Persona de Contacto" value={selectedClient.contact} color="text-indigo-500" />
                     <InfoRow icon={Receipt} label="IBAN / Nº Cuenta" value={selectedClient.accountNumber} color="text-blue-700" />
                     <InfoRow icon={CreditCard} label="Forma de Pago" value={selectedClient.paymentMethod} color="text-amber-600" />
