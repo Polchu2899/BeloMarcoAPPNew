@@ -70,6 +70,25 @@ const Index = () => {
     }
   };
 
+  const handleShare = async () => {
+    const shareData = {
+      title: 'BelaMarco APP',
+      text: 'Gestiona tus clientes y rutas con BelaMarco APP',
+      url: window.location.origin
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(window.location.origin);
+        showSuccess("Enlace copiado al portapapeles");
+      }
+    } catch (err) {
+      console.log('Error al compartir', err);
+    }
+  };
+
   const handleImport = (importedData: Client[]) => {
     saveToDatabase(importedData);
     showSuccess(`${importedData.length} clientes memorizados`);
@@ -115,9 +134,14 @@ const Index = () => {
       <header className="bg-primary text-primary-foreground p-6 rounded-b-[2.5rem] shadow-xl sticky top-0 z-10">
         <div className="flex justify-between items-center mb-6">
           <Logo className="h-12" />
-          <Button size="icon" variant="ghost" className="rounded-full bg-white/10" onClick={() => setActiveTab('settings')}>
-            <Database className="h-5 w-5" />
-          </Button>
+          <div className="flex gap-2">
+            <Button size="icon" variant="ghost" className="rounded-full bg-white/10" onClick={handleShare}>
+              <Share2 className="h-5 w-5" />
+            </Button>
+            <Button size="icon" variant="ghost" className="rounded-full bg-white/10" onClick={() => setActiveTab('settings')}>
+              <Database className="h-5 w-5" />
+            </Button>
+          </div>
         </div>
         <div className="relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
