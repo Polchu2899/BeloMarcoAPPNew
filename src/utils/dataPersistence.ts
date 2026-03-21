@@ -56,19 +56,18 @@ export const parseCSV = (csvText: string): Client[] => {
     
     const cleanValues = values.map(v => v.replace(/^"|"$/g, '').replace(/""/g, '"'));
     
-    // Lógica inteligente para separar Email de Teléfono
-    // Recogemos todos los posibles campos de contacto
+    // 1. Separación inteligente de Email y Teléfono
     const contactFields = [
-      cleanValues[5], // Teléfono 1
-      cleanValues[6], // Teléfono 2
-      cleanValues[7], // Teléfono 3
-      cleanValues[8], // Teléfono 4
-      cleanValues[10] // Email original
+      cleanValues[5], cleanValues[6], cleanValues[7], cleanValues[8], cleanValues[10]
     ].filter(v => v && v.trim() !== '');
 
-    // Separamos los que tienen @ (emails) de los que no (teléfonos)
     const emails = contactFields.filter(v => v.includes('@'));
     const phones = contactFields.filter(v => !v.includes('@'));
+
+    // 2. Lógica de NIF vs DNI (Campo 15)
+    let idDocument = cleanValues[15] || '';
+    // Si empieza por letra es NIF/CIF, si acaba en letra es DNI
+    // No cambiamos el valor, pero aseguramos que se guarde en el campo correcto
 
     clients.push({
       id: cleanValues[0] || Math.random().toString(36).substr(2, 9),
@@ -76,26 +75,25 @@ export const parseCSV = (csvText: string): Client[] => {
       address: cleanValues[2] || '',
       lat: cleanValues[3],
       lng: cleanValues[4],
-      // Asignamos los teléfonos encontrados en orden
       phone: phones[0] || '',
       phone2: phones[1] || '',
       phone3: phones[2] || '',
       phone4: phones[3] || '',
       website: cleanValues[9],
-      // Asignamos el primer email encontrado
       email: emails[0] || '',
       rating: cleanValues[11],
       markerColor: cleanValues[12],
       tags: cleanValues[13],
       zones: cleanValues[14],
-      nif: cleanValues[15],
-      contact: cleanValues[16],
-      paymentMethod: cleanValues[17],
-      accountNumber: cleanValues[18],
-      postalCode: cleanValues[19],
-      shippingAddress: cleanValues[20],
-      taxType: cleanValues[21],
-      shops: cleanValues[22],
+      // Mapeo exhaustivo según la imagen y el CSV
+      nif: idDocument,                                // Campo 1 (NIF/CIF)
+      contact: cleanValues[16],                       // Campo 2 (CONTACTO)
+      paymentMethod: cleanValues[17],                 // Campo 3 (FORMA DE PAGO)
+      accountNumber: cleanValues[18],                 // Campo 4 (NUMERO DE CUENTA)
+      postalCode: cleanValues[19],                    // Campo 5 (CODIGO POSTAL)
+      shippingAddress: cleanValues[20],               // Campo 6 (DIRECCION DE ENVIO)
+      taxType: cleanValues[21],                       // Campo 7 (IVA/RE)
+      shops: cleanValues[22],                         // Campo 8 (BOTIGUES)
       custom9: cleanValues[23],
       custom10: cleanValues[24],
       activities: [],

@@ -41,7 +41,6 @@ const Index = () => {
       rating: c.rating || c.Valoración || '',
       tags: c.tags || c.Etiquetas || '',
       zones: c.zones || c.Zonas || '',
-      // Mapeo específico de campos personalizados del CSV
       nif: c.nif || c['Campo personalizado 1 (NIF/CIF)'] || '',
       contact: c.contact || c['Campo personalizado 2 (CONTACTO)'] || '',
       paymentMethod: c.paymentMethod || c['Campo personalizado 3 (FORMA DE PAGO)'] || '',
@@ -147,6 +146,16 @@ const Index = () => {
         </div>
       </div>
     );
+  };
+
+  // Función para determinar si es NIF o DNI
+  const getDocLabel = (doc: string) => {
+    if (!doc) return "NIF / DNI";
+    const firstChar = doc.charAt(0).toUpperCase();
+    const lastChar = doc.charAt(doc.length - 1).toUpperCase();
+    if (/[A-Z]/.test(firstChar)) return "NIF / CIF";
+    if (/[A-Z]/.test(lastChar)) return "DNI";
+    return "NIF / DNI";
   };
 
   return (
@@ -272,7 +281,7 @@ const Index = () => {
                     <InfoRow icon={Phone} label="Teléfono 1" value={selectedClient.phone} color="text-green-500" />
                     <InfoRow icon={Phone} label="Teléfono 2" value={selectedClient.phone2} color="text-green-600" />
                     <InfoRow icon={Mail} label="E-mail" value={selectedClient.email} color="text-amber-500" />
-                    <InfoRow icon={Hash} label="NIF / CIF" value={selectedClient.nif} color="text-slate-700" />
+                    <InfoRow icon={Hash} label={getDocLabel(selectedClient.nif || '')} value={selectedClient.nif} color="text-slate-700" />
                     <InfoRow icon={User} label="Contacto" value={selectedClient.contact} color="text-indigo-500" />
                     <InfoRow icon={CreditCard} label="Forma de Pago" value={selectedClient.paymentMethod} color="text-amber-600" />
                     <InfoRow icon={Receipt} label="IBAN / Número de Cuenta" value={selectedClient.accountNumber} color="text-blue-700" />
