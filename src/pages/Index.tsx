@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Search, Map, Filter, Database, ChevronRight, Camera, FileText, Share2, Copy, Check, Monitor, Smartphone, AlertCircle, X, Trash2, Download, Apple, Info, User, MapPin, Phone, Mail, CreditCard, Receipt, Store, Hash, Navigation, Globe, Tag, Star } from 'lucide-react';
+import { Search, Map, Filter, Database, ChevronRight, Camera, FileText, Share2, Copy, Check, Monitor, Smartphone, AlertCircle, X, Trash2, Download, Apple, Info, User, MapPin, Phone, Mail, CreditCard, Receipt, Store, Hash, Navigation, Globe, Tag, Star, Cloud, CloudOff } from 'lucide-react';
 import { Client, Activity } from '../types/client';
 import ClientCard from '../components/ClientCard';
 import ClientForm from '../components/ClientForm';
@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { showSuccess, showError } from '@/utils/toast';
+import { supabase } from '@/lib/supabase';
 
 const Index = () => {
   const [clients, setClients] = useState<Client[]>([]);
@@ -23,50 +24,72 @@ const Index = () => {
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [displayLimit, setDisplayLimit] = useState(20);
+  const [isOnline, setIsOnline] = useState(false);
 
-  const hydrateClients = (data: any[]): Client[] => {
-    return data.map(c => ({
-      ...c,
-      id: c.id || Math.random().toString(36).substr(2, 9),
-      name: c.name || 'Sin Nombre',
-      address: c.address || 'Sin Dirección',
-      phone: String(c.phone || ''),
-      phone2: String(c.phone2 || ''),
-      email: c.email || '',
-      nif: c.nif || '',
-      contact: c.contact || '',
-      paymentMethod: c.paymentMethod || '',
-      accountNumber: c.accountNumber || '',
-      postalCode: c.postalCode || '',
-      shippingAddress: c.shippingAddress || '',
-      taxType: c.taxType || '',
-      shops: c.shops || '',
-      activities: Array.isArray(c.activities) ? c.activities : [],
-      documents: Array.isArray(c.documents) ? c.documents : [],
-    }));
+  // Cargar datos iniciales desde Supabase
+  const fetchClients = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('clients')
+        .select('*')
+        .order('name', { ascending: true });
+
+      if (error) throw error;
+      
+      if (data) {
+        setClients(data as Client[]);
+        setIsOnline(true);
+      }
+    } catch (e) {
+      console.error("Error cargando desde Supabase, usando local", e);
+      setIsOnline(false);
+      const saved = localStorage.getItem('belamarcoapp_db_v1');
+      if (saved) setClients(JSON.parse(saved));
+    }
   };
 
   useEffect(() => {
-    const savedClients = localStorage.getItem('belamarcoapp_db_v1');
-    if (savedClients) {
-      try {
-        const parsed = JSON.parse(savedClients);
-        if (Array.isArray(parsed)) {
-          setClients(hydrateClients(parsed));
+    fetchClients();
+
+    // Suscribirse a cambios en tiempo real
+    const channel = supabase
+      .channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'clients' },
+        (payload) => {
+          console.log('Cambio detectado en tiempo real:', payload);
+          fetchClients(); // Recargar datos cuando algo cambie en otro dispositivo
         }
-      } catch (e) {
-        console.error("Error cargando base de datos", e);
-      }
-    }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
-  const saveToDatabase = (newClients: Client[]) => {
+  const saveToDatabase = async (newClient: Client) => {
     try {
-      const hydrated = hydrateClients(newClients);
-      setClients(hydrated);
-      localStorage.setItem('belamarcoapp_db_v1', JSON.stringify(hydrated));
+      const { error } = await supabase
+        .from('clients')
+        .upsert({
+          ...newClient,
+          updated_at: new Date().toISOString()
+        });
+
+      if (error) throw error;
+      
+      showSuccess("Sincronizado con la nube");
+      fetchClients();
     } catch (e) {
-      showError("Error al guardar.");
+      showError("Error al sincronizar. Se guardará localmente.");
+      // Fallback local
+      const updated = editingClient 
+        ? clients.map(c => c.id === newClient.id ? newClient : c)
+        : [...clients, newClient];
+      setClients(updated);
+      localStorage.setItem('belamarcoapp_db_v1', JSON.stringify(updated));
     }
   };
 
@@ -89,17 +112,37 @@ const Index = () => {
     }
   };
 
-  const handleImport = (importedData: Client[]) => {
-    saveToDatabase(importedData);
-    showSuccess(`${importedData.length} clientes memorizados`);
-    setActiveTab('clients');
+  const handleImport = async (importedData: Client[]) => {
+    try {
+      const { error } = await supabase
+        .from('clients')
+        .upsert(importedData);
+
+      if (error) throw error;
+      
+      showSuccess(`${importedData.length} clientes sincronizados`);
+      fetchClients();
+      setActiveTab('clients');
+    } catch (e) {
+      showError("Error al importar a la nube.");
+    }
   };
 
-  const handleDeleteClient = (id: string) => {
+  const handleDeleteClient = async (id: string) => {
     if (confirm("¿Eliminar este cliente?")) {
-      const updated = clients.filter(c => c.id !== id);
-      saveToDatabase(updated);
-      showSuccess("Cliente eliminado");
+      try {
+        const { error } = await supabase
+          .from('clients')
+          .delete()
+          .eq('id', id);
+
+        if (error) throw error;
+        
+        showSuccess("Cliente eliminado de la nube");
+        fetchClients();
+      } catch (e) {
+        showError("Error al eliminar de la nube.");
+      }
     }
   };
 
@@ -135,6 +178,10 @@ const Index = () => {
         <div className="flex justify-between items-center mb-6">
           <Logo className="h-12" />
           <div className="flex gap-2">
+            <div className={`flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-bold ${isOnline ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+              {isOnline ? <Cloud className="h-3 w-3" /> : <CloudOff className="h-3 w-3" />}
+              {isOnline ? 'NUBE' : 'LOCAL'}
+            </div>
             <Button size="icon" variant="ghost" className="rounded-full bg-white/10" onClick={handleShare}>
               <Share2 className="h-5 w-5" />
             </Button>
@@ -228,10 +275,14 @@ const Index = () => {
                     <InfoRow icon={FileText} label="Notas" value={selectedClient.notes} color="text-slate-400" />
                   </TabsContent>
                   <TabsContent value="actividad" className="m-0">
-                    <ActivityLog activities={selectedClient.activities || []} onAddActivity={(a) => {
-                      const updated = clients.map(c => c.id === selectedClient.id ? { ...c, activities: [...(c.activities || []), { ...a, id: Date.now().toString() }] } : c);
-                      saveToDatabase(updated);
-                      setSelectedClient(updated.find(c => c.id === selectedClient.id) || null);
+                    <ActivityLog activities={selectedClient.activities || []} onAddActivity={async (a) => {
+                      const newActivity = { ...a, id: Date.now().toString() };
+                      const updatedClient = { 
+                        ...selectedClient, 
+                        activities: [...(selectedClient.activities || []), newActivity] 
+                      };
+                      await saveToDatabase(updatedClient);
+                      setSelectedClient(updatedClient);
                     }} />
                   </TabsContent>
                 </div>
@@ -245,9 +296,8 @@ const Index = () => {
         <DialogContent className="sm:max-w-[425px] h-[80vh] flex flex-col p-0 overflow-hidden rounded-t-3xl">
           <div className="p-6 border-b"><DialogTitle>{editingClient ? 'Editar Cliente' : 'Nuevo Cliente'}</DialogTitle></div>
           <div className="flex-1 overflow-hidden p-6">
-            <ClientForm client={editingClient} onSave={(data) => {
-              const updated = editingClient ? clients.map(c => c.id === data.id ? { ...c, ...data } : c) : [...clients, data];
-              saveToDatabase(updated);
+            <ClientForm client={editingClient} onSave={async (data) => {
+              await saveToDatabase(data);
               setIsFormOpen(false);
             }} onCancel={() => setIsFormOpen(false)} />
           </div>
