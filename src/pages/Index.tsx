@@ -174,7 +174,7 @@ const Index = () => {
     console.error('Error al importar:', e);
     showError(`Error al importar: ${e?.message}`);
   }
-};x
+};
 
   const handleDeleteClient = async (id: string) => {
     if (confirm("¿Eliminar este cliente?")) {
