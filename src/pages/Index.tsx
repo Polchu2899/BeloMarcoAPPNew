@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { showSuccess, showError } from '@/utils/toast';
-import { supabase } from '@/lib/supabase';
+import { supabase, isSupabaseReady } from '@/lib/supabase';
 
 const Index = () => {
   const [clients, setClients] = useState<Client[]>([]);
@@ -26,8 +26,14 @@ const Index = () => {
   const [displayLimit, setDisplayLimit] = useState(20);
   const [isOnline, setIsOnline] = useState(false);
 
-  // Cargar datos iniciales desde Supabase
   const fetchClients = async () => {
+    if (!isSupabaseReady) {
+      const saved = localStorage.getItem('belamarcoapp_db_v1');
+      if (saved) setClients(JSON.parse(saved));
+      setIsOnline(false);
+      return;
+    }
+
     try {
       const { data, error } = await supabase
         .from('clients')
@@ -41,7 +47,7 @@ const Index = () => {
         setIsOnline(true);
       }
     } catch (e) {
-      console.error("Error cargando desde Supabase, usando local", e);
+      console.error("Error cargando desde Supabase", e);
       setIsOnline(false);
       const saved = localStorage.getItem('belamarcoapp_db_v1');
       if (saved) setClients(JSON.parse(saved));
@@ -51,25 +57,36 @@ const Index = () => {
   useEffect(() => {
     fetchClients();
 
-    // Suscribirse a cambios en tiempo real
-    const channel = supabase
-      .channel('schema-db-changes')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'clients' },
-        (payload) => {
-          console.log('Cambio detectado en tiempo real:', payload);
-          fetchClients(); // Recargar datos cuando algo cambie en otro dispositivo
-        }
-      )
-      .subscribe();
+    if (isSupabaseReady) {
+      const channel = supabase
+        .channel('schema-db-changes')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'clients' },
+          () => fetchClients()
+        )
+        .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
   }, []);
 
   const saveToDatabase = async (newClient: Client) => {
+    // Guardar siempre localmente primero por seguridad
+    const updatedLocal = editingClient 
+      ? clients.map(c => c.id === newClient.id ? newClient : c)
+      : [...clients, newClient];
+    
+    setClients(updatedLocal);
+    localStorage.setItem('belamarcoapp_db_v1', JSON.stringify(updatedLocal));
+
+    if (!isSupabaseReady) {
+      showSuccess("Guardado localmente (Sin conexión a la nube)");
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from('clients')
@@ -79,17 +96,10 @@ const Index = () => {
         });
 
       if (error) throw error;
-      
       showSuccess("Sincronizado con la nube");
       fetchClients();
     } catch (e) {
-      showError("Error al sincronizar. Se guardará localmente.");
-      // Fallback local
-      const updated = editingClient 
-        ? clients.map(c => c.id === newClient.id ? newClient : c)
-        : [...clients, newClient];
-      setClients(updated);
-      localStorage.setItem('belamarcoapp_db_v1', JSON.stringify(updated));
+      showError("Error al sincronizar con la nube.");
     }
   };
 
@@ -113,13 +123,16 @@ const Index = () => {
   };
 
   const handleImport = async (importedData: Client[]) => {
-    try {
-      const { error } = await supabase
-        .from('clients')
-        .upsert(importedData);
+    if (!isSupabaseReady) {
+      setClients(importedData);
+      localStorage.setItem('belamarcoapp_db_v1', JSON.stringify(importedData));
+      showSuccess(`${importedData.length} clientes guardados localmente`);
+      return;
+    }
 
+    try {
+      const { error } = await supabase.from('clients').upsert(importedData);
       if (error) throw error;
-      
       showSuccess(`${importedData.length} clientes sincronizados`);
       fetchClients();
       setActiveTab('clients');
@@ -130,18 +143,20 @@ const Index = () => {
 
   const handleDeleteClient = async (id: string) => {
     if (confirm("¿Eliminar este cliente?")) {
-      try {
-        const { error } = await supabase
-          .from('clients')
-          .delete()
-          .eq('id', id);
+      const updatedLocal = clients.filter(c => c.id !== id);
+      setClients(updatedLocal);
+      localStorage.setItem('belamarcoapp_db_v1', JSON.stringify(updatedLocal));
 
-        if (error) throw error;
-        
-        showSuccess("Cliente eliminado de la nube");
-        fetchClients();
-      } catch (e) {
-        showError("Error al eliminar de la nube.");
+      if (isSupabaseReady) {
+        try {
+          await supabase.from('clients').delete().eq('id', id);
+          showSuccess("Eliminado de la nube");
+          fetchClients();
+        } catch (e) {
+          showError("Error al eliminar de la nube.");
+        }
+      } else {
+        showSuccess("Eliminado localmente");
       }
     }
   };
