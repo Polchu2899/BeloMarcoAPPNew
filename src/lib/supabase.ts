@@ -1,21 +1,15 @@
+"use client";
+
 import { createClient } from '@supabase/supabase-js';
 
-// Obtenemos las variables de entorno
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+// Usamos las credenciales proporcionadas por el usuario
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://szxvddvetwsclekhwtjr.supabase.co';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'sb_publishable_0-92M1xKSHpK08VdTkMT0w_iNJNi3D1';
 
-// Si no existen, usamos valores temporales para que la app no se rompa al arrancar
-// pero mostramos un aviso claro en la consola.
-const isConfigured = Boolean(supabaseUrl && supabaseAnonKey);
+// Verificamos si tenemos las credenciales mínimas
+const isConfigured = Boolean(supabaseUrl && supabaseAnonKey && !supabaseUrl.includes('placeholder'));
 
-if (!isConfigured) {
-  console.error("⚠️ CONFIGURACIÓN REQUERIDA: Supabase no está conectado correctamente. Por favor, asegúrate de haber completado la integración.");
-}
-
-export const supabase = createClient(
-  supabaseUrl || 'https://placeholder-url.supabase.co', 
-  supabaseAnonKey || 'placeholder-key'
-);
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // Exportamos una utilidad para saber si estamos conectados de verdad
 export const isSupabaseReady = isConfigured;
