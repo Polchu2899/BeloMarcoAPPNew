@@ -123,23 +123,58 @@ const Index = () => {
   };
 
   const handleImport = async (importedData: Client[]) => {
-    if (!isSupabaseReady) {
-      setClients(importedData);
-      localStorage.setItem('belamarcoapp_db_v1', JSON.stringify(importedData));
-      showSuccess(`${importedData.length} clientes guardados localmente`);
+  if (!isSupabaseReady) {
+    setClients(importedData);
+    localStorage.setItem('belamarcoapp_db_v1', JSON.stringify(importedData));
+    showSuccess(`${importedData.length} clientes guardados localmente`);
+    return;
+  }
+
+  try {
+    const dataToUpload = importedData.map(client => ({
+      id: client.id,
+      name: client.name || '',
+      address: client.address || '',
+      lat: client.lat || '',
+      lng: client.lng || '',
+      phone: client.phone || '',
+      phone2: client.phone2 || '',
+      website: client.website || '',
+      email: client.email || '',
+      rating: client.rating || '',
+      markercolor: client.markerColor || '',
+      tags: client.tags || '',
+      zones: client.zones || '',
+      nif: client.nif || '',
+      contact: client.contact || '',
+      paymentmethod: client.paymentMethod || '',
+      accountnumber: client.accountNumber || '',
+      postalcode: client.postalCode || '',
+      shippingaddress: client.shippingAddress || '',
+      taxtype: client.taxType || '',
+      shops: client.shops || '',
+      notes: client.notes || '',
+      activities: client.activities || [],
+      documents: client.documents || [],
+      updated_at: new Date().toISOString(),
+    }));
+
+    const { error } = await supabase.from('clients').upsert(dataToUpload);
+
+    if (error) {
+      console.error('Error Supabase:', error);
+      showError(`Error: ${error.message}`);
       return;
     }
 
-    try {
-      const { error } = await supabase.from('clients').upsert(importedData);
-      if (error) throw error;
-      showSuccess(`${importedData.length} clientes sincronizados`);
-      fetchClients();
-      setActiveTab('clients');
-    } catch (e) {
-      showError("Error al importar a la nube.");
-    }
-  };
+    showSuccess(`${importedData.length} clientes sincronizados con la nube ✅`);
+    fetchClients();
+    setActiveTab('clients');
+  } catch (e: any) {
+    console.error('Error al importar:', e);
+    showError(`Error al importar: ${e?.message}`);
+  }
+};x
 
   const handleDeleteClient = async (id: string) => {
     if (confirm("¿Eliminar este cliente?")) {
