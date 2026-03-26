@@ -26,6 +26,63 @@ const Index = () => {
   const [displayLimit, setDisplayLimit] = useState(20);
   const [isOnline, setIsOnline] = useState(false);
 
+  // Convierte Client (camelCase) al formato de columnas de Supabase (lowercase)
+  const toSupabase = (client: Client) => ({
+    id: client.id,
+    name: client.name || '',
+    address: client.address || '',
+    lat: client.lat || '',
+    lng: client.lng || '',
+    phone: client.phone || '',
+    phone2: client.phone2 || '',
+    website: client.website || '',
+    email: client.email || '',
+    rating: client.rating || '',
+    markercolor: client.markerColor || '',
+    tags: client.tags || '',
+    zones: client.zones || '',
+    nif: client.nif || '',
+    contact: client.contact || '',
+    paymentmethod: client.paymentMethod || '',
+    accountnumber: client.accountNumber || '',
+    postalcode: client.postalCode || '',
+    shippingaddress: client.shippingAddress || '',
+    taxtype: client.taxType || '',
+    shops: client.shops || '',
+    notes: client.notes || '',
+    activities: client.activities || [],
+    documents: client.documents || [],
+    updated_at: new Date().toISOString(),
+  });
+
+  // Convierte datos de Supabase (lowercase) de vuelta a Client (camelCase)
+  const fromSupabase = (row: any): Client => ({
+    id: row.id,
+    name: row.name,
+    address: row.address,
+    lat: row.lat,
+    lng: row.lng,
+    phone: row.phone,
+    phone2: row.phone2,
+    website: row.website,
+    email: row.email,
+    rating: row.rating,
+    markerColor: row.markercolor,
+    tags: row.tags,
+    zones: row.zones,
+    nif: row.nif,
+    contact: row.contact,
+    paymentMethod: row.paymentmethod,
+    accountNumber: row.accountnumber,
+    postalCode: row.postalcode,
+    shippingAddress: row.shippingaddress,
+    taxType: row.taxtype,
+    shops: row.shops,
+    notes: row.notes,
+    activities: row.activities || [],
+    documents: row.documents || [],
+  });
+
   const fetchClients = async () => {
     if (!isSupabaseReady) {
       const saved = localStorage.getItem('belamarcoapp_db_v1');
@@ -41,9 +98,9 @@ const Index = () => {
         .order('name', { ascending: true });
 
       if (error) throw error;
-      
+
       if (data) {
-        setClients(data as Client[]);
+        setClients(data.map(fromSupabase));
         setIsOnline(true);
       }
     } catch (e) {
@@ -74,11 +131,10 @@ const Index = () => {
   }, []);
 
   const saveToDatabase = async (newClient: Client) => {
-    // Guardar siempre localmente primero por seguridad
-    const updatedLocal = editingClient 
+    const updatedLocal = editingClient
       ? clients.map(c => c.id === newClient.id ? newClient : c)
       : [...clients, newClient];
-    
+
     setClients(updatedLocal);
     localStorage.setItem('belamarcoapp_db_v1', JSON.stringify(updatedLocal));
 
@@ -90,13 +146,10 @@ const Index = () => {
     try {
       const { error } = await supabase
         .from('clients')
-        .upsert({
-          ...newClient,
-          updated_at: new Date().toISOString()
-        });
+        .upsert(toSupabase(newClient));
 
       if (error) throw error;
-      showSuccess("Sincronizado con la nube");
+      showSuccess("Sincronizado con la nube ✅");
       fetchClients();
     } catch (e) {
       showError("Error al sincronizar con la nube.");
@@ -123,58 +176,31 @@ const Index = () => {
   };
 
   const handleImport = async (importedData: Client[]) => {
-  if (!isSupabaseReady) {
-    setClients(importedData);
-    localStorage.setItem('belamarcoapp_db_v1', JSON.stringify(importedData));
-    showSuccess(`${importedData.length} clientes guardados localmente`);
-    return;
-  }
-
-  try {
-    const dataToUpload = importedData.map(client => ({
-      id: client.id,
-      name: client.name || '',
-      address: client.address || '',
-      lat: client.lat || '',
-      lng: client.lng || '',
-      phone: client.phone || '',
-      phone2: client.phone2 || '',
-      website: client.website || '',
-      email: client.email || '',
-      rating: client.rating || '',
-      markercolor: client.markerColor || '',
-      tags: client.tags || '',
-      zones: client.zones || '',
-      nif: client.nif || '',
-      contact: client.contact || '',
-      paymentmethod: client.paymentMethod || '',
-      accountnumber: client.accountNumber || '',
-      postalcode: client.postalCode || '',
-      shippingaddress: client.shippingAddress || '',
-      taxtype: client.taxType || '',
-      shops: client.shops || '',
-      notes: client.notes || '',
-      activities: client.activities || [],
-      documents: client.documents || [],
-      updated_at: new Date().toISOString(),
-    }));
-
-    const { error } = await supabase.from('clients').upsert(dataToUpload);
-
-    if (error) {
-      console.error('Error Supabase:', error);
-      showError(`Error: ${error.message}`);
+    if (!isSupabaseReady) {
+      setClients(importedData);
+      localStorage.setItem('belamarcoapp_db_v1', JSON.stringify(importedData));
+      showSuccess(`${importedData.length} clientes guardados localmente`);
       return;
     }
 
-    showSuccess(`${importedData.length} clientes sincronizados con la nube ✅`);
-    fetchClients();
-    setActiveTab('clients');
-  } catch (e: any) {
-    console.error('Error al importar:', e);
-    showError(`Error al importar: ${e?.message}`);
-  }
-};
+    try {
+      const dataToUpload = importedData.map(toSupabase);
+      const { error } = await supabase.from('clients').upsert(dataToUpload);
+
+      if (error) {
+        console.error('Error Supabase:', error);
+        showError(`Error: ${error.message}`);
+        return;
+      }
+
+      showSuccess(`${importedData.length} clientes sincronizados con la nube ✅`);
+      fetchClients();
+      setActiveTab('clients');
+    } catch (e: any) {
+      console.error('Error al importar:', e);
+      showError(`Error al importar: ${e?.message}`);
+    }
+  };
 
   const handleDeleteClient = async (id: string) => {
     if (confirm("¿Eliminar este cliente?")) {
@@ -199,7 +225,7 @@ const Index = () => {
   const filteredClients = useMemo(() => {
     if (!searchTerm.trim()) return clients;
     const s = searchTerm.toLowerCase();
-    return clients.filter(c => 
+    return clients.filter(c =>
       (c.name || '').toLowerCase().includes(s) ||
       (c.zones || '').toLowerCase().includes(s) ||
       (c.nif || '').toLowerCase().includes(s) ||
@@ -242,8 +268,8 @@ const Index = () => {
         </div>
         <div className="relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-          <Input 
-            placeholder="Buscar por nombre, zona o NIF..." 
+          <Input
+            placeholder="Buscar por nombre, zona o NIF..."
             className="pl-11 pr-10 bg-white text-black rounded-2xl border-none h-14 shadow-2xl"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -273,9 +299,9 @@ const Index = () => {
           <div className="p-4 bg-white rounded-2xl border shadow-sm">
             <h2 className="font-bold mb-4">Configuración</h2>
             <DataManagement clients={clients} onImport={handleImport} />
-            <Button 
-              variant="destructive" 
-              className="w-full mt-8 gap-2" 
+            <Button
+              variant="destructive"
+              className="w-full mt-8 gap-2"
               onClick={() => { if(confirm("¿Borrar todos los datos?")) { localStorage.removeItem('belamarcoapp_db_v1'); setClients([]); showSuccess("Base de datos borrada"); } }}
             >
               <Trash2 className="h-4 w-4" /> Borrar Base de Datos
@@ -327,9 +353,9 @@ const Index = () => {
                   <TabsContent value="actividad" className="m-0">
                     <ActivityLog activities={selectedClient.activities || []} onAddActivity={async (a) => {
                       const newActivity = { ...a, id: Date.now().toString() };
-                      const updatedClient = { 
-                        ...selectedClient, 
-                        activities: [...(selectedClient.activities || []), newActivity] 
+                      const updatedClient = {
+                        ...selectedClient,
+                        activities: [...(selectedClient.activities || []), newActivity]
                       };
                       await saveToDatabase(updatedClient);
                       setSelectedClient(updatedClient);
