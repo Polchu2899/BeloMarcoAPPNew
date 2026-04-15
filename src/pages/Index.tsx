@@ -99,6 +99,7 @@ const Index = () => {
       showSuccess("Sincronizado con la nube");
       fetchClients();
     } catch (e) {
+      console.error("Error al guardar en Supabase:", e);
       showError("Error al sincronizar con la nube.");
     }
   };
@@ -131,13 +132,25 @@ const Index = () => {
     }
 
     try {
-      const { error } = await supabase.from('clients').upsert(importedData);
-      if (error) throw error;
+      // Limpiamos los datos para asegurar que no hay campos nulos problemáticos
+      const cleanData = importedData.map(c => ({
+        ...c,
+        updated_at: new Date().toISOString()
+      }));
+
+      const { error } = await supabase.from('clients').upsert(cleanData);
+      
+      if (error) {
+        console.error("Error de Supabase al importar:", error);
+        throw error;
+      }
+      
       showSuccess(`${importedData.length} clientes sincronizados`);
       fetchClients();
       setActiveTab('clients');
-    } catch (e) {
-      showError("Error al importar a la nube.");
+    } catch (e: any) {
+      console.error("Error detallado de importación:", e);
+      showError(`Error al importar a la nube: ${e.message || 'Verifica la conexión'}`);
     }
   };
 
@@ -168,7 +181,8 @@ const Index = () => {
       (c.name || '').toLowerCase().includes(s) ||
       (c.zones || '').toLowerCase().includes(s) ||
       (c.nif || '').toLowerCase().includes(s) ||
-      (c.address || '').toLowerCase().includes(s)
+      (c.address || '').toLowerCase().includes(s) ||
+      (c.email || '').toLowerCase().includes(s)
     );
   }, [clients, searchTerm]);
 

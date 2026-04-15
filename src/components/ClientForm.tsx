@@ -75,6 +75,11 @@ const ClientForm = ({ client, onSave, onCancel }: ClientFormProps) => {
             </div>
           </div>
 
+          <div className="grid gap-2">
+            <Label htmlFor="email">Correo Electrónico (Email)</Label>
+            <Input id="email" type="email" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} placeholder="ejemplo@correo.com" />
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div className="grid gap-2">
               <Label htmlFor="nif">NIF / CIF / DNI</Label>
