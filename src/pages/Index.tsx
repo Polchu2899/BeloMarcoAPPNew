@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Search, Map, Filter, Database, ChevronRight, Camera, FileText, Share2, Copy, Check, Monitor, Smartphone, AlertCircle, X, Trash2, Download, Apple, Info, User, MapPin, Phone, Mail, CreditCard, Receipt, Store, Hash, Navigation, Globe, Tag, Star, Cloud, CloudOff } from 'lucide-react';
+import { Search, Map, Filter, Database, ChevronRight, Camera, FileText, Share2, Copy, Check, Monitor, Smartphone, AlertCircle, X, Trash2, Download, Apple, Info, User, MapPin, Phone, Mail, CreditCard, Receipt, Store, Hash, Navigation, Globe, Tag, Star, Cloud, CloudOff, LogOut } from 'lucide-react';
 import { Client, Activity } from '../types/client';
 import ClientCard from '../components/ClientCard';
 import ClientForm from '../components/ClientForm';
@@ -157,6 +157,11 @@ const Index = () => {
     }
   };
 
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    showSuccess("Sesión cerrada");
+  };
+
   const handleShare = async () => {
     const shareData = {
       title: 'BelaMarco APP',
@@ -297,16 +302,30 @@ const Index = () => {
         )}
 
         {activeTab === 'settings' && (
-          <div className="p-4 bg-white rounded-2xl border shadow-sm">
-            <h2 className="font-bold mb-4">Configuración</h2>
-            <DataManagement clients={clients} onImport={handleImport} />
-            <Button
-              variant="destructive"
-              className="w-full mt-8 gap-2"
-              onClick={() => { if(confirm("¿Borrar todos los datos?")) { localStorage.removeItem('belamarcoapp_db_v1'); setClients([]); showSuccess("Base de datos borrada"); } }}
-            >
-              <Trash2 className="h-4 w-4" /> Borrar Base de Datos
-            </Button>
+          <div className="p-4 bg-white rounded-2xl border shadow-sm space-y-6">
+            <div>
+              <h2 className="font-bold mb-4">Configuración de Datos</h2>
+              <DataManagement clients={clients} onImport={handleImport} />
+            </div>
+            
+            <div className="pt-6 border-t">
+              <h2 className="font-bold mb-4">Cuenta y Seguridad</h2>
+              <Button 
+                variant="outline" 
+                className="w-full gap-2 h-12 rounded-xl border-slate-200"
+                onClick={handleLogout}
+              >
+                <LogOut className="h-4 w-4 text-red-500" /> Cerrar Sesión
+              </Button>
+              
+              <Button
+                variant="ghost"
+                className="w-full mt-4 gap-2 text-destructive/60 hover:text-destructive"
+                onClick={() => { if(confirm("¿Borrar todos los datos locales?")) { localStorage.removeItem('belamarcoapp_db_v1'); setClients([]); showSuccess("Base de datos borrada"); } }}
+              >
+                <Trash2 className="h-4 w-4" /> Borrar Datos Locales
+              </Button>
+            </div>
           </div>
         )}
       </main>
