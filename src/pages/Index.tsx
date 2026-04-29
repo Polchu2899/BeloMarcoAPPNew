@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Search, Map, Filter, Database, ChevronRight, Camera, FileText, Share2, Copy, Check, Monitor, Smartphone, AlertCircle, X, Trash2, Download, Apple, Info, User, MapPin, Phone, Mail, CreditCard, Receipt, Store, Hash, Navigation, Globe, Tag, Star, Cloud, CloudOff, LogOut } from 'lucide-react';
+import { Search, Map, Filter, Database, ChevronRight, Camera, FileText, Share2, Copy, Check, Monitor, Smartphone, AlertCircle, X, Trash2, Download, Apple, Info, User, MapPin, Phone, Mail, CreditCard, Receipt, Store, Hash, Navigation, Globe, Tag, Star, Cloud, CloudOff, LogOut, CheckSquare, Square } from 'lucide-react';
 import { Client, Activity } from '../types/client';
 import ClientCard from '../components/ClientCard';
 import ClientForm from '../components/ClientForm';
@@ -23,8 +23,11 @@ const Index = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
-  const [displayLimit, setDisplayLimit] = useState(20);
   const [isOnline, setIsOnline] = useState(false);
+  
+  // Estados para selección masiva
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   // Convierte Client (camelCase) al formato de columnas de Supabase (lowercase)
   const toSupabase = (client: Client) => ({
@@ -227,6 +230,47 @@ const Index = () => {
     }
   };
 
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) return;
+    
+    if (confirm(`¿Estás seguro de eliminar ${selectedIds.length} clientes seleccionados? Esta acción no se puede deshacer.`)) {
+      const updatedLocal = clients.filter(c => !selectedIds.includes(c.id));
+      setClients(updatedLocal);
+      localStorage.setItem('belamarcoapp_db_v1', JSON.stringify(updatedLocal));
+
+      if (isSupabaseReady) {
+        try {
+          const { error } = await supabase.from('clients').delete().in('id', selectedIds);
+          if (error) throw error;
+          showSuccess(`${selectedIds.length} clientes eliminados de la nube`);
+          fetchClients();
+        } catch (e) {
+          showError("Error al eliminar de la nube.");
+        }
+      } else {
+        showSuccess(`${selectedIds.length} clientes eliminados localmente`);
+      }
+      
+      setSelectedIds([]);
+      setIsSelectionMode(false);
+    }
+  };
+
+  const toggleSelection = (id: string) => {
+    setSelectedIds(prev => 
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    );
+  };
+
+  const selectAllFiltered = () => {
+    const filteredIds = filteredClients.map(c => c.id);
+    if (selectedIds.length === filteredIds.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(filteredIds);
+    }
+  };
+
   const filteredClients = useMemo(() => {
     if (!searchTerm.trim()) return clients;
     const s = searchTerm.toLowerCase();
@@ -238,8 +282,6 @@ const Index = () => {
       (c.email || '').toLowerCase().includes(s)
     );
   }, [clients, searchTerm]);
-
-  const visibleClients = filteredClients.slice(0, displayLimit);
 
   const InfoRow = ({ icon: Icon, label, value, color = "text-slate-400" }: { icon: any, label: string, value?: string, color?: string }) => {
     if (!value || String(value).trim() === '' || value === 'undefined') return null;
@@ -286,15 +328,59 @@ const Index = () => {
       <main className="p-4 max-w-md mx-auto">
         {activeTab === 'clients' && (
           <div className="space-y-4">
-            {visibleClients.length === 0 ? (
+            <div className="flex justify-between items-center px-2 mb-2">
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                {filteredClients.length} Clientes encontrados
+              </p>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className={isSelectionMode ? "text-blue-600 font-bold" : "text-slate-400"}
+                onClick={() => {
+                  setIsSelectionMode(!isSelectionMode);
+                  setSelectedIds([]);
+                }}
+              >
+                {isSelectionMode ? "Cancelar" : "Seleccionar"}
+              </Button>
+            </div>
+
+            {isSelectionMode && (
+              <div className="bg-blue-600 text-white p-4 rounded-2xl shadow-lg flex justify-between items-center mb-4 animate-in slide-in-from-top duration-300">
+                <div className="flex items-center gap-3">
+                  <Button variant="ghost" size="icon" className="text-white hover:bg-white/20" onClick={selectAllFiltered}>
+                    {selectedIds.length === filteredClients.length ? <CheckSquare className="h-6 w-6" /> : <Square className="h-6 w-6" />}
+                  </Button>
+                  <span className="font-bold">{selectedIds.length} seleccionados</span>
+                </div>
+                <Button 
+                  variant="destructive" 
+                  size="sm" 
+                  className="bg-white text-red-600 hover:bg-red-50 font-bold rounded-xl"
+                  disabled={selectedIds.length === 0}
+                  onClick={handleBulkDelete}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" /> Eliminar
+                </Button>
+              </div>
+            )}
+
+            {filteredClients.length === 0 ? (
               <div className="text-center py-20 text-slate-400">
                 <Database className="h-12 w-12 mx-auto mb-4 opacity-20" />
-                <p>No hay clientes. Importa un CSV en Ajustes.</p>
+                <p>No hay clientes que coincidan.</p>
               </div>
             ) : (
-              visibleClients.map(client => (
-                <div key={client.id} onClick={() => setSelectedClient(client)} className="cursor-pointer">
-                  <ClientCard client={client} onEdit={(c) => { setEditingClient(c); setIsFormOpen(true); }} onDelete={handleDeleteClient} />
+              filteredClients.map(client => (
+                <div key={client.id} onClick={() => !isSelectionMode && setSelectedClient(client)} className={!isSelectionMode ? "cursor-pointer" : ""}>
+                  <ClientCard 
+                    client={client} 
+                    onEdit={(c) => { setEditingClient(c); setIsFormOpen(true); }} 
+                    onDelete={handleDeleteClient}
+                    isSelectionMode={isSelectionMode}
+                    isSelected={selectedIds.includes(client.id)}
+                    onSelect={toggleSelection}
+                  />
                 </div>
               ))
             )}
