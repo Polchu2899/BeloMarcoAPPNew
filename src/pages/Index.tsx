@@ -325,7 +325,7 @@ const Index = () => {
         </div>
       </header>
 
-      <main className="p-4 max-w-md mx-auto">
+      <main className={isSelectionMode ? "p-4 max-w-md mx-auto pb-32" : "p-4 max-w-md mx-auto"}>
         {activeTab === 'clients' && (
           <div className="space-y-4">
             <div className="flex justify-between items-center px-2 mb-2">
@@ -344,26 +344,6 @@ const Index = () => {
                 {isSelectionMode ? "Cancelar" : "Seleccionar"}
               </Button>
             </div>
-
-            {isSelectionMode && (
-              <div className="bg-blue-600 text-white p-4 rounded-2xl shadow-lg flex justify-between items-center mb-4 animate-in slide-in-from-top duration-300">
-                <div className="flex items-center gap-3">
-                  <Button variant="ghost" size="icon" className="text-white hover:bg-white/20" onClick={selectAllFiltered}>
-                    {selectedIds.length === filteredClients.length ? <CheckSquare className="h-6 w-6" /> : <Square className="h-6 w-6" />}
-                  </Button>
-                  <span className="font-bold">{selectedIds.length} seleccionados</span>
-                </div>
-                <Button 
-                  variant="destructive" 
-                  size="sm" 
-                  className="bg-white text-red-600 hover:bg-red-50 font-bold rounded-xl"
-                  disabled={selectedIds.length === 0}
-                  onClick={handleBulkDelete}
-                >
-                  <Trash2 className="h-4 w-4 mr-2" /> Eliminar
-                </Button>
-              </div>
-            )}
 
             {filteredClients.length === 0 ? (
               <div className="text-center py-20 text-slate-400">
@@ -415,6 +395,42 @@ const Index = () => {
           </div>
         )}
       </main>
+
+      {/* Barra de eliminación masiva flotante */}
+      {isSelectionMode && activeTab === 'clients' && (
+        <div className="fixed bottom-20 left-4 right-4 z-40 animate-in slide-in-from-bottom duration-300">
+          <div className="bg-blue-600 text-white p-4 rounded-2xl shadow-2xl flex justify-between items-center border-2 border-white/20">
+            <div className="flex items-center gap-3">
+              <Button variant="ghost" size="icon" className="text-white hover:bg-white/20 h-10 w-10" onClick={selectAllFiltered}>
+                {selectedIds.length === filteredClients.length ? <CheckSquare className="h-6 w-6" /> : <Square className="h-6 w-6" />}
+              </Button>
+              <div className="flex flex-col">
+                <span className="font-bold text-sm leading-none">{selectedIds.length}</span>
+                <span className="text-[10px] opacity-80 uppercase font-bold">Marcados</span>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button 
+                variant="destructive" 
+                size="sm" 
+                className="bg-white text-red-600 hover:bg-red-50 font-bold rounded-xl h-10 px-4"
+                disabled={selectedIds.length === 0}
+                onClick={handleBulkDelete}
+              >
+                <Trash2 className="h-4 w-4 mr-2" /> Eliminar
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="text-white hover:bg-white/10 font-bold rounded-xl h-10"
+                onClick={() => { setIsSelectionMode(false); setSelectedIds([]); }}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <Dialog open={!!selectedClient} onOpenChange={() => setSelectedClient(null)}>
         <DialogContent className="sm:max-w-[500px] h-[90vh] flex flex-col p-0 overflow-hidden rounded-t-[2rem]">
