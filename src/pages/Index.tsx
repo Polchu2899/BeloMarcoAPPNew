@@ -8,6 +8,7 @@ import ClientForm from '../components/ClientForm';
 import DataManagement from '../components/DataManagement';
 import ActivityLog from '../components/ActivityLog';
 import BottomNav from '../components/BottomNav';
+import MapView from '../components/MapView';
 import Logo from '../components/Logo';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -364,6 +365,20 @@ const Index = () => {
                 </div>
               ))
             )}
+          </div>
+        )}
+
+        {activeTab === 'map' && (
+          <div className="space-y-4">
+            <div className="px-2 mb-2">
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                Mapa de Clientes
+              </p>
+            </div>
+            <MapView 
+              clients={filteredClients} 
+              onSelectClient={(client) => setSelectedClient(client)} 
+            />
           </div>
         )}
 
